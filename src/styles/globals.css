@@ -1,0 +1,90 @@
+/* @import url("https://fonts.cdnfonts.com/css/svn-gotham"); */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 120 20% 98%;
+    --foreground: 140 5% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 140 5% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 140 5% 15%;
+    --primary: 135 18% 35%;
+    --primary-foreground: 120 20% 98%;
+    --secondary: 110 35% 65%;
+    --secondary-foreground: 140 5% 15%;
+    --muted: 120 10% 95%;
+    --muted-foreground: 140 5% 45%;
+    --accent: 110 35% 65%;
+    --accent-foreground: 140 5% 15%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 120 20% 98%;
+    --border: 120 10% 88%;
+    --input: 120 10% 88%;
+    --ring: 135 18% 35%;
+    --chart-1: 135 18% 35%;
+    --chart-2: 110 35% 65%;
+    --chart-3: 125 25% 52%;
+    --chart-4: 115 22% 60%;
+    --chart-5: 145 15% 30%;
+    --radius: 0.75rem;
+    --sidebar: 140 10% 25%;
+    --sidebar-foreground: 120 20% 98%;
+    --sidebar-primary: 110 35% 65%;
+    --sidebar-primary-foreground: 140 5% 15%;
+    --sidebar-accent: 138 15% 32%;
+    --sidebar-accent-foreground: 120 20% 98%;
+    --sidebar-border: 140 12% 28%;
+    --sidebar-ring: 110 35% 65%;
+  }
+
+  .dark {
+    --background: 140 10% 12%;
+    --foreground: 120 20% 98%;
+    --card: 140 10% 16%;
+    --card-foreground: 120 20% 98%;
+    --popover: 140 10% 16%;
+    --popover-foreground: 120 20% 98%;
+    --primary: 110 35% 65%;
+    --primary-foreground: 140 5% 15%;
+    --secondary: 140 10% 25%;
+    --secondary-foreground: 120 20% 98%;
+    --muted: 140 10% 20%;
+    --muted-foreground: 120 10% 60%;
+    --accent: 135 18% 35%;
+    --accent-foreground: 120 20% 98%;
+    --destructive: 0 62.8% 45.6%;
+    --destructive-foreground: 120 20% 98%;
+    --border: 140 10% 24%;
+    --input: 140 10% 24%;
+    --ring: 110 35% 65%;
+    --chart-1: 110 35% 65%;
+    --chart-2: 135 18% 35%;
+    --chart-3: 125 25% 52%;
+    --chart-4: 115 22% 60%;
+    --chart-5: 145 15% 30%;
+    --sidebar: 140 10% 16%;
+    --sidebar-foreground: 120 20% 98%;
+    --sidebar-primary: 110 35% 65%;
+    --sidebar-primary-foreground: 140 5% 15%;
+    --sidebar-accent: 140 10% 20%;
+    --sidebar-accent-foreground: 120 20% 98%;
+    --sidebar-border: 140 10% 24%;
+    --sidebar-ring: 110 35% 65%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: "SVN-Gotham", -apple-system, BlinkMacSystemFont, "Segoe UI",
+      sans-serif;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
