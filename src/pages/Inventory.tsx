@@ -9,6 +9,7 @@ import { Plus, Search, Loader2, AlertTriangle, Trash2, Calendar } from "lucide-r
 import { reportService } from "@/services/reportService";
 import { stockEntryService, type StockEntry } from "@/services/stockEntryService";
 import { StockEntryDialog } from "@/components/StockEntryDialog";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import type { InventoryReport } from "@/services/reportService";
 import {
   Tabs,
@@ -28,6 +29,8 @@ export default function InventoryPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [activeTab, setActiveTab] = useState("inventory");
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [entryToDelete, setEntryToDelete] = useState<number | null>(null);
 
   const fetchInventory = async () => {
     try {
@@ -92,27 +95,25 @@ export default function InventoryPage() {
     }
   };
 
-  const handleDeleteStockEntry = async (id: number) => {
-    toast((t) => (
-      <div className="flex flex-col gap-2">
-        <p className="font-medium">Xác nhận xóa phiếu nhập</p>
-        <p className="text-sm text-muted-foreground">Bạn có chắc muốn xóa phiếu nhập này? Số lượng sản phẩm sẽ được hoàn lại.</p>
-        <div className="flex gap-2 justify-end">
-          <button onClick={() => toast.dismiss(t)} className="px-3 py-1 text-sm rounded bg-gray-200 hover:bg-gray-300">Hủy</button>
-          <button onClick={async () => {
-            toast.dismiss(t);
-            try {
-              await stockEntryService.delete(id);
-              toast.success("Xóa phiếu nhập thành công!");
-              fetchInventory();
-              fetchStockEntries();
-            } catch (error: any) {
-              toast.error(error.response?.data?.message || "Lỗi khi xóa phiếu nhập kho");
-            }
-          }} className="px-3 py-1 text-sm rounded bg-red-500 hover:bg-red-600 text-white">Xóa</button>
-        </div>
-      </div>
-    ), { duration: Infinity });
+  const handleDeleteStockEntry = (id: number) => {
+    setEntryToDelete(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDeleteEntry = async () => {
+    if (!entryToDelete) return;
+    
+    try {
+      await stockEntryService.delete(entryToDelete);
+      toast.success("Xóa phiếu nhập thành công!");
+      fetchInventory();
+      fetchStockEntries();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Lỗi khi xóa phiếu nhập kho");
+    } finally {
+      setDeleteConfirmOpen(false);
+      setEntryToDelete(null);
+    }
   };
 
   const filteredInventory = Array.isArray(inventory) 
@@ -459,6 +460,17 @@ export default function InventoryPage() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         onSave={handleSaveStockEntry}
+      />
+
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Xác nhận xóa phiếu nhập"
+        description="Bạn có chắc muốn xóa phiếu nhập này? Số lượng sản phẩm sẽ được hoàn lại."
+        onConfirm={confirmDeleteEntry}
+        confirmText="Xóa"
+        cancelText="Hủy"
+        variant="destructive"
       />
     </DashboardLayout>
   );

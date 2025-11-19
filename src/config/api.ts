@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -10,7 +11,6 @@ export const api = axios.create({
   withCredentials: true,
 });
 
-// Request interceptor để thêm token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("accessToken");
@@ -24,15 +24,16 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor để xử lý lỗi
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Chỉ redirect khi 401 và KHÔNG phải trang login
-    if (error.response?.status === 401 && !error.config.url?.includes('/login')) {
+    if (
+      error.response?.status === 401 &&
+      !error.config.url?.includes("/login")
+    ) {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("user");
-      if (window.location.pathname !== '/login') {
+      if (window.location.pathname !== "/login") {
         window.location.href = "/login";
       }
     }

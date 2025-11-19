@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,10 +28,12 @@ export default function LoginPage() {
       navigate("/");
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || err.response?.data;
-      if (typeof errorMessage === 'string') {
-        setError(errorMessage === "Invalid email or password" 
-          ? "Email hoặc mật khẩu không chính xác" 
-          : errorMessage);
+      if (typeof errorMessage === "string") {
+        setError(
+          errorMessage === "Invalid email or password"
+            ? "Email hoặc mật khẩu không chính xác"
+            : errorMessage
+        );
       } else {
         setError("Đăng nhập thất bại. Vui lòng thử lại!");
       }
@@ -115,11 +117,13 @@ export default function LoginPage() {
                   value={formData.password}
                   onChange={(e) => {
                     setFormData({ ...formData, password: e.target.value });
-                    if (error) setError(""); // Clear error on input change
+                    if (error) setError("");
                   }}
                   placeholder="••••••••"
                   className={`h-11 bg-muted/50 border-border/50 focus:bg-background transition-colors pr-10 ${
-                    error ? "border-destructive/50 focus:border-destructive" : ""
+                    error
+                      ? "border-destructive/50 focus:border-destructive"
+                      : ""
                   }`}
                   required
                   minLength={6}
@@ -138,7 +142,7 @@ export default function LoginPage() {
                 </button>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-2">
               <input
                 type="checkbox"

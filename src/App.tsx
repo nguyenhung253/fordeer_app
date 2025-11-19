@@ -1,17 +1,25 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import { Toaster } from "sonner";
 import DashboardPage from "@/pages/Dashboard";
 import ProductsPage from "@/pages/Products";
 import CustomersPage from "@/pages/Customers";
 import OrdersPage from "@/pages/Orders";
 import InventoryPage from "@/pages/Inventory";
-import StatisticsPage from "@/pages/Statistics";
 import LoginPage from "@/pages/Login";
 import RegisterPage from "@/pages/Register";
 import { authService } from "@/services/authService";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
-  return authService.isAuthenticated() ? <>{children}</> : <Navigate to="/login" />;
+  return authService.isAuthenticated() ? (
+    <>{children}</>
+  ) : (
+    <Navigate to="/login" />
+  );
 }
 
 function App() {
@@ -65,14 +73,6 @@ function App() {
           element={
             <PrivateRoute>
               <InventoryPage />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/statistics"
-          element={
-            <PrivateRoute>
-              <StatisticsPage />
             </PrivateRoute>
           }
         />

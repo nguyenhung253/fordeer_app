@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Edit, Trash2, Mail, Phone, Loader2, RotateCcw } from "lucide-react";
 import { customerService } from "@/services/customerService";
 import { CustomerDialog } from "@/components/CustomerDialog";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import type { Customer } from "@/types/api";
 
 export default function CustomersPage() {
@@ -19,11 +20,32 @@ export default function CustomersPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [showInactive, setShowInactive] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [customerToDelete, setCustomerToDelete] = useState<number | null>(null);
   const [stats, setStats] = useState({
     total: 0,
     active: 0,
     inactive: 0,
   });
+
+  const fetchStats = async () => {
+    try {
+      // Fetch all customers without pagination to get accurate stats
+      const allCustomersResponse = await customerService.getAll({
+        page: 1,
+        limit: 9999, // Get all customers
+      });
+      
+      const allCustomers = allCustomersResponse.data;
+      setStats({
+        total: allCustomersResponse.pagination.totalItems,
+        active: allCustomers.filter((c) => c.isActive).length,
+        inactive: allCustomers.filter((c) => !c.isActive).length,
+      });
+    } catch (error) {
+      console.error("Lỗi khi tải thống kê:", error);
+    }
+  };
 
   const fetchCustomers = async () => {
     try {
@@ -36,13 +58,6 @@ export default function CustomersPage() {
       });
       setCustomers(response.data);
       setTotalPages(response.pagination.totalPages);
-
-      // Update stats
-      setStats({
-        total: response.pagination.totalItems,
-        active: response.data.filter((c) => c.isActive).length,
-        inactive: response.data.filter((c) => !c.isActive).length,
-      });
     } catch (error) {
       console.error("Lỗi khi tải khách hàng:", error);
     } finally {
@@ -51,29 +66,32 @@ export default function CustomersPage() {
   };
 
   useEffect(() => {
+    fetchStats();
+  }, []);
+
+  useEffect(() => {
     fetchCustomers();
   }, [currentPage, searchTerm, showInactive]);
 
-  const handleDelete = async (id: number) => {
-    toast((t) => (
-      <div className="flex flex-col gap-2">
-        <p className="font-medium">Xác nhận xóa khách hàng</p>
-        <p className="text-sm text-muted-foreground">Bạn có chắc muốn xóa khách hàng này?</p>
-        <div className="flex gap-2 justify-end">
-          <button onClick={() => toast.dismiss(t)} className="px-3 py-1 text-sm rounded bg-gray-200 hover:bg-gray-300">Hủy</button>
-          <button onClick={async () => {
-            toast.dismiss(t);
-            try {
-              await customerService.delete(id);
-              toast.success("Xóa khách hàng thành công!");
-              fetchCustomers();
-            } catch (error: any) {
-              toast.error(error.response?.data?.message || "Lỗi khi xóa khách hàng");
-            }
-          }} className="px-3 py-1 text-sm rounded bg-red-500 hover:bg-red-600 text-white">Xóa</button>
-        </div>
-      </div>
-    ), { duration: Infinity });
+  const handleDelete = (id: number) => {
+    setCustomerToDelete(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!customerToDelete) return;
+    
+    try {
+      await customerService.delete(customerToDelete);
+      toast.success("Xóa khách hàng thành công!");
+      fetchCustomers();
+      fetchStats(); // Update stats after delete
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Lỗi khi xóa khách hàng");
+    } finally {
+      setDeleteConfirmOpen(false);
+      setCustomerToDelete(null);
+    }
   };
 
   const handleRestore = async (id: number) => {
@@ -81,6 +99,7 @@ export default function CustomersPage() {
       await customerService.restore(id);
       toast.success("Khôi phục khách hàng thành công!");
       fetchCustomers();
+      fetchStats(); // Update stats after restore
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Lỗi khi khôi phục khách hàng");
     }
@@ -101,6 +120,7 @@ export default function CustomersPage() {
         toast.success("Thêm khách hàng thành công!");
       }
       fetchCustomers();
+      fetchStats(); // Update stats after save
       setDialogOpen(false);
       setSelectedCustomer(null);
     } catch (error: any) {
@@ -355,6 +375,17 @@ export default function CustomersPage() {
         onOpenChange={setDialogOpen}
         customer={selectedCustomer}
         onSave={handleSave}
+      />
+
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Xác nhận xóa khách hàng"
+        description="Bạn có chắc muốn xóa khách hàng này? Hành động này không thể hoàn tác."
+        onConfirm={confirmDelete}
+        confirmText="Xóa"
+        cancelText="Hủy"
+        variant="destructive"
       />
       
     </DashboardLayout>

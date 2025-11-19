@@ -1,26 +1,26 @@
 import { useState, useEffect } from "react";
-import { toast } from "sonner";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Eye, Loader2, X } from "lucide-react";
+import { Plus, Eye, Loader2, X } from "lucide-react";
 import { orderService } from "@/services/orderService";
 import { OrderDialog } from "@/components/OrderDialog";
 import { OrderDetailDialog } from "@/components/OrderDetailDialog";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import type { Order } from "@/types/api";
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
+  const [orderToCancel, setOrderToCancel] = useState<number | null>(null);
 
   // Stats
   const [stats, setStats] = useState({
@@ -30,6 +30,27 @@ export default function OrdersPage() {
     completed: 0,
     cancelled: 0,
   });
+
+  const fetchStats = async () => {
+    try {
+      // Fetch all orders without pagination to get accurate stats
+      const allOrdersResponse = await orderService.getAll({
+        page: 1,
+        limit: 9999, // Get all orders
+      });
+      
+      const allOrders = allOrdersResponse.data;
+      setStats({
+        total: allOrdersResponse.pagination.totalItems,
+        pending: allOrders.filter((o) => o.status === "pending").length,
+        processing: allOrders.filter((o) => o.status === "processing").length,
+        completed: allOrders.filter((o) => o.status === "completed").length,
+        cancelled: allOrders.filter((o) => o.status === "cancelled").length,
+      });
+    } catch (error) {
+      console.error("Lỗi khi tải thống kê:", error);
+    }
+  };
 
   const fetchOrders = async () => {
     try {
@@ -41,22 +62,16 @@ export default function OrdersPage() {
       });
       setOrders(response.data);
       setTotalPages(response.pagination.totalPages);
-
-      // Calculate stats
-      const allOrders = response.data;
-      setStats({
-        total: response.pagination.totalItems,
-        pending: allOrders.filter((o) => o.status === "pending").length,
-        processing: allOrders.filter((o) => o.status === "processing").length,
-        completed: allOrders.filter((o) => o.status === "completed").length,
-        cancelled: allOrders.filter((o) => o.status === "cancelled").length,
-      });
     } catch (error) {
       console.error("Lỗi khi tải đơn hàng:", error);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
 
   useEffect(() => {
     fetchOrders();
@@ -76,18 +91,29 @@ export default function OrdersPage() {
     try {
       await orderService.updateStatus(orderId, newStatus);
       fetchOrders();
+      fetchStats(); // Update stats after status change
     } catch (error: any) {
       alert(error.response?.data?.message || "Lỗi khi cập nhật trạng thái");
     }
   };
 
-  const handleCancelOrder = async (orderId: number) => {
-    if (!confirm("Bạn có chắc muốn hủy đơn hàng này?")) return;
+  const handleCancelOrder = (orderId: number) => {
+    setOrderToCancel(orderId);
+    setCancelConfirmOpen(true);
+  };
+
+  const confirmCancelOrder = async () => {
+    if (!orderToCancel) return;
+    
     try {
-      await orderService.cancel(orderId);
+      await orderService.cancel(orderToCancel);
       fetchOrders();
+      fetchStats(); // Update stats after canceling
     } catch (error: any) {
       alert(error.response?.data?.message || "Lỗi khi hủy đơn hàng");
+    } finally {
+      setCancelConfirmOpen(false);
+      setOrderToCancel(null);
     }
   };
 
@@ -383,6 +409,7 @@ export default function OrdersPage() {
         onOpenChange={setDialogOpen}
         onSave={() => {
           fetchOrders();
+          fetchStats(); // Update stats after creating order
           setDialogOpen(false);
         }}
       />
@@ -392,6 +419,17 @@ export default function OrdersPage() {
         onOpenChange={setDetailDialogOpen}
         order={selectedOrder}
         onUpdateStatus={handleUpdateStatus}
+      />
+
+      <ConfirmDialog
+        open={cancelConfirmOpen}
+        onOpenChange={setCancelConfirmOpen}
+        title="Xác nhận hủy đơn hàng"
+        description="Bạn có chắc muốn hủy đơn hàng này? Hành động này không thể hoàn tác."
+        onConfirm={confirmCancelOrder}
+        confirmText="Hủy đơn"
+        cancelText="Quay lại"
+        variant="destructive"
       />
     </DashboardLayout>
   );

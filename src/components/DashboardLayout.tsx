@@ -7,7 +7,6 @@ import {
   Users,
   ShoppingCart,
   PackageOpen,
-  BarChart3,
   Menu,
   X,
   Settings,
@@ -24,7 +23,6 @@ const navigation = [
   { name: "Khách hàng", href: "/customers", icon: Users },
   { name: "Đơn hàng", href: "/orders", icon: ShoppingCart },
   { name: "Nhập kho", href: "/inventory", icon: PackageOpen },
-  { name: "Thống kê", href: "/statistics", icon: BarChart3 },
   { name: "Tạo tài khoản", href: "/register", icon: User, adminOnly: true },
 ];
 
@@ -82,7 +80,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               if (item.adminOnly && currentUser?.role !== "admin") {
                 return null;
               }
-              
+
               const isActive = pathname === item.href;
               return (
                 <Link

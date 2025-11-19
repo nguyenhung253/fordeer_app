@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Edit, Trash2, Loader2, Eye, EyeOff } from "lucide-react";
 import { productService } from "@/services/productService";
 import { ProductDialog } from "@/components/ProductDialog";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import type { Product } from "@/types/api";
 
 export default function ProductsPage() {
@@ -19,6 +20,8 @@ export default function ProductsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showInactive, setShowInactive] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<number | null>(null);
 
   const fetchProducts = async () => {
     try {
@@ -58,40 +61,28 @@ export default function ProductsPage() {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    toast((t) => (
-      <div className="flex flex-col gap-2">
-        <p className="font-medium">Xác nhận xóa sản phẩm</p>
-        <p className="text-sm text-muted-foreground">Bạn có chắc muốn xóa vĩnh viễn sản phẩm này?</p>
-        <div className="flex gap-2 justify-end">
-          <button
-            onClick={() => toast.dismiss(t)}
-            className="px-3 py-1 text-sm rounded bg-gray-200 hover:bg-gray-300"
-          >
-            Hủy
-          </button>
-          <button
-            onClick={async () => {
-              toast.dismiss(t);
-              try {
-                await productService.delete(id);
-                toast.success("Xóa sản phẩm thành công!");
-                if (products.length === 1 && currentPage > 1) {
-                  setCurrentPage(currentPage - 1);
-                } else {
-                  await fetchProducts();
-                }
-              } catch (error: any) {
-                toast.error(error.response?.data?.message || "Lỗi khi xóa sản phẩm");
-              }
-            }}
-            className="px-3 py-1 text-sm rounded bg-red-500 hover:bg-red-600 text-white"
-          >
-            Xóa
-          </button>
-        </div>
-      </div>
-    ), { duration: Infinity });
+  const handleDelete = (id: number) => {
+    setProductToDelete(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!productToDelete) return;
+    
+    try {
+      await productService.delete(productToDelete);
+      toast.success("Xóa sản phẩm thành công!");
+      if (products.length === 1 && currentPage > 1) {
+        setCurrentPage(currentPage - 1);
+      } else {
+        await fetchProducts();
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Lỗi khi xóa sản phẩm");
+    } finally {
+      setDeleteConfirmOpen(false);
+      setProductToDelete(null);
+    }
   };
 
   const handleEdit = (product: Product) => {
@@ -311,6 +302,17 @@ export default function ProductsPage() {
         onOpenChange={setDialogOpen}
         product={selectedProduct}
         onSave={handleSave}
+      />
+
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Xác nhận xóa sản phẩm"
+        description="Bạn có chắc muốn xóa vĩnh viễn sản phẩm này? Hành động này không thể hoàn tác."
+        onConfirm={confirmDelete}
+        confirmText="Xóa"
+        cancelText="Hủy"
+        variant="destructive"
       />
     </DashboardLayout>
   );

@@ -165,8 +165,8 @@ export default function RegisterPage() {
               <Label htmlFor="role">Vai trò</Label>
               <Select
                 value={formData.role}
-                onValueChange={(value: "admin" | "staff") =>
-                  setFormData({ ...formData, role: value })
+                onValueChange={(value) =>
+                  setFormData({ ...formData, role: value as "admin" | "staff" })
                 }
               >
                 <SelectTrigger>
