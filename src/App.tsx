@@ -12,6 +12,7 @@ import OrdersPage from "@/pages/Orders";
 import InventoryPage from "@/pages/Inventory";
 import LoginPage from "@/pages/Login";
 import RegisterPage from "@/pages/Register";
+import ProfilePage from "@/pages/Profile";
 import { authService } from "@/services/authService";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -76,6 +77,15 @@ function App() {
             </PrivateRoute>
           }
         />
+        <Route
+          path="/profile"
+          element={
+            <PrivateRoute>
+              <ProfilePage />
+            </PrivateRoute>
+          }
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );

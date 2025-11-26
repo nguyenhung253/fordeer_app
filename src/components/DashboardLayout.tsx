@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { authService } from "@/services/authService";
+import { SettingsDialog } from "@/components/SettingsDialog";
 
 const navigation = [
   { name: "Tổng quan", href: "/", icon: LayoutDashboard },
@@ -33,6 +34,7 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const location = useLocation();
   const pathname = location.pathname;
@@ -190,21 +192,29 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     <User className="h-4 w-4" />
                     Hồ sơ cá nhân
                   </Link>
-                  <Link
-                    to="/settings"
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-accent transition-colors"
-                    onClick={() => setProfileOpen(false)}
+                  <button
+                    onClick={() => {
+                      setProfileOpen(false);
+                      setSettingsOpen(true);
+                    }}
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-accent transition-colors"
                   >
                     <Settings className="h-4 w-4" />
                     Cài đặt
-                  </Link>
+                  </button>
                   <hr className="my-1 border-border" />
                   <button
                     className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-destructive hover:bg-accent transition-colors"
                     onClick={async () => {
                       setProfileOpen(false);
-                      await authService.logout();
-                      window.location.href = "/login";
+                      try {
+                        await authService.logout();
+                      } catch (error) {
+                        console.error("Logout error:", error);
+                      } finally {
+                        // Force redirect to login
+                        window.location.replace("/login");
+                      }
                     }}
                   >
                     <LogOut className="h-4 w-4" />
@@ -219,6 +229,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Page content */}
         <main className="p-4 lg:p-6">{children}</main>
       </div>
+
+      {/* Settings Dialog */}
+      <SettingsDialog
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+      />
     </div>
   );
 }
