@@ -2,7 +2,11 @@ import { api } from "@/config/api";
 import type { Order, PaginationParams, PaginationResponse } from "@/types/api";
 
 interface CreateOrderRequest {
-  customerId: number;
+  customerInfo: {
+    fullName: string;
+    phone: string;
+    address?: string;
+  };
   items: Array<{
     productId: number;
     quantity: number;
@@ -11,8 +15,12 @@ interface CreateOrderRequest {
 }
 
 export const orderService = {
-  getAll: async (params?: PaginationParams & { status?: string; customerId?: number }): Promise<PaginationResponse<Order>> => {
-    const response = await api.get<PaginationResponse<Order>>("/orders", { params });
+  getAll: async (
+    params?: PaginationParams & { status?: string; customerId?: number }
+  ): Promise<PaginationResponse<Order>> => {
+    const response = await api.get<PaginationResponse<Order>>("/orders", {
+      params,
+    });
     return response.data;
   },
 

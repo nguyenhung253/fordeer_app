@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -9,6 +9,7 @@ import {
   Loader2,
   DollarSign,
 } from "lucide-react";
+import { cn, formatVND } from "@/lib/utils";
 import { productService } from "@/services/productService";
 import { customerService } from "@/services/customerService";
 import { orderService } from "@/services/orderService";
@@ -39,10 +40,19 @@ export default function DashboardPage() {
   });
   const [bestSelling, setBestSelling] = useState<any[]>([]);
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
+  const [isVisible, setIsVisible] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchDashboardData();
   }, []);
+
+  // Trigger animation when data loads
+  useEffect(() => {
+    if (!loading) {
+      setTimeout(() => setIsVisible(true), 100);
+    }
+  }, [loading]);
 
   const fetchDashboardData = async () => {
     try {
@@ -106,10 +116,64 @@ export default function DashboardPage() {
     }
   };
 
+  // Stat card component with animation
+  const StatCard = ({
+    title,
+    value,
+    subtitle,
+    icon: Icon,
+    index,
+    showTrend = false,
+  }: {
+    title: string;
+    value: string | number;
+    subtitle: string;
+    icon: any;
+    index: number;
+    showTrend?: boolean;
+  }) => (
+    <Card
+      className={cn(
+        "group cursor-pointer transition-all duration-500 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 hover:border-primary/30",
+        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+      )}
+      style={{ transitionDelay: `${index * 100}ms` }}
+    >
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-sm font-medium text-muted-foreground">
+          {title}
+        </CardTitle>
+        <div className="rounded-lg bg-primary/10 p-2 transition-all duration-300 group-hover:bg-primary/20 group-hover:scale-110">
+          <Icon className="h-5 w-5 text-primary transition-transform duration-300 group-hover:rotate-12" />
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold text-foreground transition-all duration-300 group-hover:text-primary">
+          {value}
+        </div>
+        <div
+          className={cn(
+            "flex items-center gap-1 text-xs",
+            showTrend ? "text-primary" : "text-muted-foreground"
+          )}
+        >
+          {showTrend && <TrendingUp className="h-3 w-3 animate-bounce" />}
+          <span>{subtitle}</span>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <div>
+      <div ref={containerRef} className="space-y-6">
+        {/* Header with fade-in animation */}
+        <div
+          className={cn(
+            "transition-all duration-700",
+            isVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
+          )}
+        >
           <h1 className="text-3xl font-bold text-foreground">
             Tổng quan & Thống kê
           </h1>
@@ -124,102 +188,67 @@ export default function DashboardPage() {
           </div>
         ) : (
           <>
+            {/* Stats Grid with staggered animation */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Doanh thu
-                  </CardTitle>
-                  <DollarSign className="h-5 w-5 text-primary" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-foreground">
-                    ₫{(stats.totalRevenue / 1000000).toFixed(1)}M
-                  </div>
-                  <div className="flex items-center gap-1 text-xs text-primary">
-                    <TrendingUp className="h-3 w-3" />
-                    <span>Đơn hoàn thành</span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Đơn hàng
-                  </CardTitle>
-                  <ShoppingCart className="h-5 w-5 text-primary" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-foreground">
-                    {stats.totalOrders}
-                  </div>
-                  <div className="flex items-center gap-1 text-xs text-primary">
-                    <TrendingUp className="h-3 w-3" />
-                    <span>Tổng đơn hàng</span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Khách hàng
-                  </CardTitle>
-                  <Users className="h-5 w-5 text-primary" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-foreground">
-                    {stats.totalCustomers}
-                  </div>
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <span>Tổng khách hàng</span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Sản phẩm bán ra
-                  </CardTitle>
-                  <Package className="h-5 w-5 text-primary" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-foreground">
-                    {stats.productsSold}
-                  </div>
-                  <div className="flex items-center gap-1 text-xs text-primary">
-                    <TrendingUp className="h-3 w-3" />
-                    <span>Tổng số lượng</span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Tổng sản phẩm
-                  </CardTitle>
-                  <Package className="h-5 w-5 text-primary" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-foreground">
-                    {stats.totalProducts}
-                  </div>
-                  <p className="text-xs text-muted-foreground">Đang quản lý</p>
-                </CardContent>
-              </Card>
+              <StatCard
+                title="Doanh thu"
+                value={`₫${(stats.totalRevenue / 1000000).toFixed(1)}M`}
+                subtitle="Đơn hoàn thành"
+                icon={DollarSign}
+                index={0}
+                showTrend
+              />
+              <StatCard
+                title="Đơn hàng"
+                value={stats.totalOrders}
+                subtitle="Tổng đơn hàng"
+                icon={ShoppingCart}
+                index={1}
+                showTrend
+              />
+              <StatCard
+                title="Khách hàng"
+                value={stats.totalCustomers}
+                subtitle="Tổng khách hàng"
+                icon={Users}
+                index={2}
+              />
+              <StatCard
+                title="Sản phẩm bán ra"
+                value={stats.productsSold}
+                subtitle="Tổng số lượng"
+                icon={Package}
+                index={3}
+                showTrend
+              />
+              <StatCard
+                title="Tổng sản phẩm"
+                value={stats.totalProducts}
+                subtitle="Đang quản lý"
+                icon={Package}
+                index={4}
+              />
             </div>
           </>
         )}
 
         {!loading && (
           <>
-            <div className="grid gap-4 lg:grid-cols-2">
-              <Card>
+            {/* Charts Grid with animation */}
+            <div
+              className={cn(
+                "grid gap-4 lg:grid-cols-2 transition-all duration-700",
+                isVisible
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-8"
+              )}
+              style={{ transitionDelay: "500ms" }}
+            >
+              <Card className="group transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
                 <CardHeader>
-                  <CardTitle>Biểu đồ sản phẩm bán chạy</CardTitle>
+                  <CardTitle className="transition-colors duration-300 group-hover:text-primary">
+                    Biểu đồ sản phẩm bán chạy
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {bestSelling.length === 0 ? (
@@ -246,6 +275,8 @@ export default function DashboardPage() {
                             cy="50%"
                             outerRadius={100}
                             label={(entry) => entry.productName}
+                            animationBegin={0}
+                            animationDuration={1500}
                           >
                             {bestSelling.map((_entry, index) => (
                               <Cell
@@ -253,6 +284,7 @@ export default function DashboardPage() {
                                 fill={`hsl(${120 + index * 30}, ${
                                   40 + index * 10
                                 }%, ${35 + index * 5}%)`}
+                                className="transition-all duration-300 hover:opacity-80"
                               />
                             ))}
                           </Pie>
@@ -265,9 +297,11 @@ export default function DashboardPage() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="group transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
                 <CardHeader>
-                  <CardTitle>Doanh thu theo sản phẩm</CardTitle>
+                  <CardTitle className="transition-colors duration-300 group-hover:text-primary">
+                    Doanh thu theo sản phẩm
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {bestSelling.length === 0 ? (
@@ -306,7 +340,8 @@ export default function DashboardPage() {
                             stroke="hsl(110, 35%, 65%)"
                             strokeWidth={3}
                             dot={{ fill: "hsl(110, 35%, 65%)", r: 4 }}
-                            activeDot={{ r: 6 }}
+                            activeDot={{ r: 8, className: "animate-pulse" }}
+                            animationDuration={2000}
                           />
                         </LineChart>
                       </ResponsiveContainer>
@@ -316,10 +351,21 @@ export default function DashboardPage() {
               </Card>
             </div>
 
-            <div className="grid gap-4 lg:grid-cols-2">
-              <Card>
+            {/* Lists Grid with animation */}
+            <div
+              className={cn(
+                "grid gap-4 lg:grid-cols-2 transition-all duration-700",
+                isVisible
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-8"
+              )}
+              style={{ transitionDelay: "700ms" }}
+            >
+              <Card className="group transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
                 <CardHeader>
-                  <CardTitle>Sản phẩm bán chạy</CardTitle>
+                  <CardTitle className="transition-colors duration-300 group-hover:text-primary">
+                    Sản phẩm bán chạy
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {bestSelling.length === 0 ? (
@@ -328,13 +374,21 @@ export default function DashboardPage() {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {bestSelling.map((product) => (
+                      {bestSelling.map((product, index) => (
                         <div
                           key={product.id}
-                          className="flex items-center justify-between border-b border-border pb-3 last:border-0 last:pb-0"
+                          className={cn(
+                            "flex items-center justify-between border-b border-border pb-3 last:border-0 last:pb-0",
+                            "rounded-lg px-3 py-2 -mx-3 transition-all duration-300",
+                            "hover:bg-primary/5 hover:border-transparent cursor-pointer",
+                            isVisible
+                              ? "opacity-100 translate-x-0"
+                              : "opacity-0 -translate-x-4"
+                          )}
+                          style={{ transitionDelay: `${800 + index * 100}ms` }}
                         >
                           <div>
-                            <p className="font-medium text-foreground">
+                            <p className="font-medium text-foreground transition-colors duration-300 hover:text-primary">
                               {product.productName}
                             </p>
                             <p className="text-sm text-muted-foreground">
@@ -351,9 +405,11 @@ export default function DashboardPage() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="group transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
                 <CardHeader>
-                  <CardTitle>Đơn hàng gần đây</CardTitle>
+                  <CardTitle className="transition-colors duration-300 group-hover:text-primary">
+                    Đơn hàng gần đây
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {recentOrders.length === 0 ? (
@@ -362,13 +418,21 @@ export default function DashboardPage() {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {recentOrders.map((order) => (
+                      {recentOrders.map((order, index) => (
                         <div
                           key={order.id}
-                          className="flex items-center justify-between border-b border-border pb-3 last:border-0 last:pb-0"
+                          className={cn(
+                            "flex items-center justify-between border-b border-border pb-3 last:border-0 last:pb-0",
+                            "rounded-lg px-3 py-2 -mx-3 transition-all duration-300",
+                            "hover:bg-primary/5 hover:border-transparent cursor-pointer",
+                            isVisible
+                              ? "opacity-100 translate-x-0"
+                              : "opacity-0 translate-x-4"
+                          )}
+                          style={{ transitionDelay: `${800 + index * 100}ms` }}
                         >
                           <div>
-                            <p className="text-sm font-semibold text-foreground">
+                            <p className="text-sm font-semibold text-foreground transition-colors duration-300 hover:text-primary">
                               {order.orderCode}
                             </p>
                             <p className="text-xs text-muted-foreground">
@@ -378,7 +442,7 @@ export default function DashboardPage() {
                           </div>
                           <div className="text-right">
                             <p className="text-sm font-semibold text-foreground">
-                              ₫{order.totalAmount.toLocaleString()}
+                              {formatVND(order.totalAmount)}₫
                             </p>
                             <p className="text-xs text-muted-foreground">
                               {getStatusText(order.status)}

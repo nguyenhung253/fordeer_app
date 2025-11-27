@@ -8,6 +8,7 @@ import { orderService } from "@/services/orderService";
 import { OrderDialog } from "@/components/OrderDialog";
 import { OrderDetailDialog } from "@/components/OrderDetailDialog";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { formatVND } from "@/lib/utils";
 import type { Order } from "@/types/api";
 
 export default function OrdersPage() {
@@ -38,7 +39,7 @@ export default function OrdersPage() {
         page: 1,
         limit: 9999, // Get all orders
       });
-      
+
       const allOrders = allOrdersResponse.data;
       setStats({
         total: allOrdersResponse.pagination.totalItems,
@@ -87,7 +88,10 @@ export default function OrdersPage() {
     }
   };
 
-  const handleUpdateStatus = async (orderId: number, newStatus: Order["status"]) => {
+  const handleUpdateStatus = async (
+    orderId: number,
+    newStatus: Order["status"]
+  ) => {
     try {
       await orderService.updateStatus(orderId, newStatus);
       fetchOrders();
@@ -104,7 +108,7 @@ export default function OrdersPage() {
 
   const confirmCancelOrder = async () => {
     if (!orderToCancel) return;
-    
+
     try {
       await orderService.cancel(orderToCancel);
       fetchOrders();
@@ -152,15 +156,15 @@ export default function OrdersPage() {
       <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
               Quản lý đơn hàng
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-sm sm:text-base text-muted-foreground">
               Theo dõi và quản lý đơn hàng
             </p>
           </div>
           <Button
-            className="gap-2"
+            className="gap-2 w-fit"
             onClick={() => {
               setSelectedOrder(null);
               setDialogOpen(true);
@@ -255,7 +259,9 @@ export default function OrdersPage() {
                   Chờ xử lý
                 </Button>
                 <Button
-                  variant={statusFilter === "processing" ? "default" : "outline"}
+                  variant={
+                    statusFilter === "processing" ? "default" : "outline"
+                  }
                   size="sm"
                   onClick={() => setStatusFilter("processing")}
                 >
@@ -295,7 +301,8 @@ export default function OrdersPage() {
               </div>
             ) : (
               <>
-                <div className="overflow-x-auto">
+                {/* Desktop Table View */}
+                <div className="hidden md:block overflow-x-auto">
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-border">
@@ -332,19 +339,26 @@ export default function OrdersPage() {
                             {order.orderCode}
                           </td>
                           <td className="py-4 text-sm text-foreground">
-                            {order.customer?.fullName || `ID: ${order.customerId}`}
+                            {order.customer?.fullName ||
+                              `ID: ${order.customerId}`}
                           </td>
                           <td className="py-4 text-sm text-muted-foreground">
-                            {new Date(order.createdAt).toLocaleDateString("vi-VN")}
+                            {new Date(order.createdAt).toLocaleDateString(
+                              "vi-VN"
+                            )}
                           </td>
                           <td className="py-4 text-sm font-medium text-foreground">
-                            ₫{order.totalAmount.toLocaleString()}
+                            {formatVND(order.totalAmount)}₫
                           </td>
                           <td className="py-4 text-sm text-muted-foreground">
-                            {order.discount > 0 ? `₫${order.discount.toLocaleString()}` : "-"}
+                            {order.discount > 0
+                              ? `${formatVND(order.discount)}₫`
+                              : "-"}
                           </td>
                           <td className="py-4">
-                            <Badge variant={getStatusBadgeVariant(order.status)}>
+                            <Badge
+                              variant={getStatusBadgeVariant(order.status)}
+                            >
                               {getStatusText(order.status)}
                             </Badge>
                           </td>
@@ -358,7 +372,8 @@ export default function OrdersPage() {
                               >
                                 <Eye className="h-4 w-4" />
                               </Button>
-                              {(order.status === "pending" || order.status === "processing") && (
+                              {(order.status === "pending" ||
+                                order.status === "processing") && (
                                 <Button
                                   variant="ghost"
                                   size="icon"
@@ -375,6 +390,76 @@ export default function OrdersPage() {
                     </tbody>
                   </table>
                 </div>
+
+                {/* Mobile Card View */}
+                <div className="md:hidden space-y-3">
+                  {orders.map((order) => (
+                    <div
+                      key={order.id}
+                      className="rounded-lg border border-border p-4 space-y-3"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <h3 className="font-medium text-foreground">
+                            {order.orderCode}
+                          </h3>
+                          <p className="text-xs text-muted-foreground">
+                            {order.customer?.fullName ||
+                              `ID: ${order.customerId}`}
+                          </p>
+                        </div>
+                        <Badge
+                          variant={getStatusBadgeVariant(order.status)}
+                          className="text-xs flex-shrink-0"
+                        >
+                          {getStatusText(order.status)}
+                        </Badge>
+                      </div>
+
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="text-muted-foreground">
+                          {new Date(order.createdAt).toLocaleDateString(
+                            "vi-VN"
+                          )}
+                        </div>
+                        <div className="font-medium text-foreground">
+                          {formatVND(order.totalAmount)}₫
+                        </div>
+                      </div>
+
+                      {order.discount > 0 && (
+                        <div className="text-xs text-muted-foreground">
+                          Giảm giá: {formatVND(order.discount)}₫
+                        </div>
+                      )}
+
+                      <div className="flex justify-end gap-1 pt-2 border-t border-border">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleViewDetail(order)}
+                          className="h-8 px-2"
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          Chi tiết
+                        </Button>
+                        {(order.status === "pending" ||
+                          order.status === "processing") && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleCancelOrder(order.id)}
+                            className="h-8 px-2 text-destructive hover:text-destructive"
+                          >
+                            <X className="h-4 w-4 mr-1" />
+                            Hủy
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
                 {totalPages > 1 && (
                   <div className="flex justify-center gap-2 mt-4">
                     <Button

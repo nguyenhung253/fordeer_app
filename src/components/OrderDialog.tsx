@@ -17,11 +17,10 @@ import {
   SelectItem,
   SelectTrigger,
 } from "@/components/ui/select";
-import { customerService } from "@/services/customerService";
 import { productService } from "@/services/productService";
 import { orderService } from "@/services/orderService";
 import { Loader2, Plus, Trash2 } from "lucide-react";
-import type { Customer, Product } from "@/types/api";
+import type { Product } from "@/types/api";
 
 interface OrderDialogProps {
   open: boolean;
@@ -32,23 +31,25 @@ interface OrderDialogProps {
 interface OrderItem {
   productId: number;
   quantity: number;
-  productName?: string;
-  price?: number;
   selectedProductName?: string;
 }
 
+const formatVND = (num: number) => {
+  return num.toLocaleString("vi-VN");
+};
+
 export function OrderDialog({ open, onOpenChange, onSave }: OrderDialogProps) {
-  const [customers, setCustomers] = useState<Customer[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const [formData, setFormData] = useState({
-    customerId: 0,
-    discount: "",
+  const [customerInfo, setCustomerInfo] = useState({
+    fullName: "",
+    phone: "",
+    address: "",
   });
-  
-  const [selectedCustomerName, setSelectedCustomerName] = useState("");
+
+  const [discount, setDiscount] = useState("");
 
   const [items, setItems] = useState<OrderItem[]>([
     { productId: 0, quantity: 1, selectedProductName: "" },
@@ -58,8 +59,8 @@ export function OrderDialog({ open, onOpenChange, onSave }: OrderDialogProps) {
     if (open) {
       fetchData();
       // Reset form
-      setFormData({ customerId: 0, discount: "" });
-      setSelectedCustomerName("");
+      setCustomerInfo({ fullName: "", phone: "", address: "" });
+      setDiscount("");
       setItems([{ productId: 0, quantity: 1, selectedProductName: "" }]);
     }
   }, [open]);
@@ -67,16 +68,11 @@ export function OrderDialog({ open, onOpenChange, onSave }: OrderDialogProps) {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [customersRes, productsRes] = await Promise.all([
-        customerService.getAll({ limit: 100 }),
-        productService.getAll({ limit: 100 }),
-      ]);
-      setCustomers(Array.isArray(customersRes.data) ? customersRes.data : []);
+      const productsRes = await productService.getAll({ limit: 100 });
       setProducts(Array.isArray(productsRes.data) ? productsRes.data : []);
     } catch (error) {
       console.error("Lỗi khi tải dữ liệu:", error);
       toast.error("Không thể tải dữ liệu. Vui lòng thử lại!");
-      setCustomers([]);
       setProducts([]);
     } finally {
       setLoading(false);
@@ -84,7 +80,10 @@ export function OrderDialog({ open, onOpenChange, onSave }: OrderDialogProps) {
   };
 
   const addItem = () => {
-    setItems([...items, { productId: 0, quantity: 1, selectedProductName: "" }]);
+    setItems([
+      ...items,
+      { productId: 0, quantity: 1, selectedProductName: "" },
+    ]);
   };
 
   const removeItem = (index: number) => {
@@ -107,19 +106,26 @@ export function OrderDialog({ open, onOpenChange, onSave }: OrderDialogProps) {
         }
       }
     });
-    const discount = parseFloat(formData.discount as string) || 0;
-    return Math.max(0, total - discount);
+    const discountValue = parseFloat(discount) || 0;
+    return Math.max(0, total - discountValue);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (formData.customerId === 0) {
-      toast.warning("Vui lòng chọn khách hàng");
+    if (!customerInfo.fullName.trim()) {
+      toast.warning("Vui lòng nhập tên khách hàng");
       return;
     }
 
-    const validItems = items.filter((item) => item.productId > 0 && item.quantity > 0);
+    if (!customerInfo.phone.trim()) {
+      toast.warning("Vui lòng nhập số điện thoại");
+      return;
+    }
+
+    const validItems = items.filter(
+      (item) => item.productId > 0 && item.quantity > 0
+    );
     if (validItems.length === 0) {
       toast.warning("Vui lòng thêm ít nhất một sản phẩm");
       return;
@@ -127,24 +133,30 @@ export function OrderDialog({ open, onOpenChange, onSave }: OrderDialogProps) {
 
     try {
       setSubmitting(true);
-      
+
       // Validate stock
       for (const item of validItems) {
         const product = products.find((p) => p.id === item.productId);
         if (product && product.quantity < item.quantity) {
-          toast.error(`Sản phẩm "${product.productName}" chỉ còn ${product.quantity} trong kho!`);
+          toast.error(
+            `Sản phẩm "${product.productName}" chỉ còn ${product.quantity} trong kho!`
+          );
           setSubmitting(false);
           return;
         }
       }
 
       await orderService.create({
-        customerId: formData.customerId,
+        customerInfo: {
+          fullName: customerInfo.fullName.trim(),
+          phone: customerInfo.phone.trim(),
+          address: customerInfo.address.trim() || undefined,
+        },
         items: validItems.map((item) => ({
           productId: item.productId,
           quantity: item.quantity,
         })),
-        discount: parseFloat(formData.discount) || 0,
+        discount: parseFloat(discount) || 0,
       });
 
       toast.success("Tạo đơn hàng thành công!");
@@ -152,11 +164,16 @@ export function OrderDialog({ open, onOpenChange, onSave }: OrderDialogProps) {
       onOpenChange(false);
     } catch (error: any) {
       console.error("Error creating order:", error);
-      const errorMessage = error.response?.data?.message 
-        || error.response?.data 
-        || error.message 
-        || "Lỗi khi tạo đơn hàng";
-      toast.error(typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage));
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data ||
+        error.message ||
+        "Lỗi khi tạo đơn hàng";
+      toast.error(
+        typeof errorMessage === "string"
+          ? errorMessage
+          : JSON.stringify(errorMessage)
+      );
     } finally {
       setSubmitting(false);
     }
@@ -177,39 +194,58 @@ export function OrderDialog({ open, onOpenChange, onSave }: OrderDialogProps) {
         ) : (
           <form onSubmit={handleSubmit}>
             <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="customer">Khách hàng *</Label>
-                <Select
-                  value={formData.customerId.toString()}
-                  onValueChange={(value) => {
-                    const selected = customers.find((c) => c.id.toString() === value);
-                    setFormData({ ...formData, customerId: Number(value) });
-                    setSelectedCustomerName(
-                      selected ? `${selected.fullName} - ${selected.email}` : ""
-                    );
-                  }}
-                >
-                  <SelectTrigger className="w-full">
-                    <span className="text-left truncate">
-                      {selectedCustomerName || "Chọn khách hàng"}
-                    </span>
-                  </SelectTrigger>
-                  <SelectContent className="max-h-[200px]">
-                    {customers.length === 0 ? (
-                      <div className="p-2 text-sm text-muted-foreground">
-                        Không có khách hàng
-                      </div>
-                    ) : (
-                      customers.map((customer) => (
-                        <SelectItem key={customer.id} value={customer.id.toString()}>
-                          {customer.fullName} - {customer.email}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
+              {/* Customer Info */}
+              <div className="space-y-3">
+                <Label className="text-base font-medium">
+                  Thông tin khách hàng
+                </Label>
+                <div className="grid gap-3">
+                  <div className="grid gap-2">
+                    <Label htmlFor="fullName">Tên khách hàng *</Label>
+                    <Input
+                      id="fullName"
+                      value={customerInfo.fullName}
+                      onChange={(e) =>
+                        setCustomerInfo({
+                          ...customerInfo,
+                          fullName: e.target.value,
+                        })
+                      }
+                      placeholder="Nhập tên khách hàng"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="phone">Số điện thoại *</Label>
+                    <Input
+                      id="phone"
+                      value={customerInfo.phone}
+                      onChange={(e) =>
+                        setCustomerInfo({
+                          ...customerInfo,
+                          phone: e.target.value,
+                        })
+                      }
+                      placeholder="Nhập số điện thoại"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="address">Địa chỉ</Label>
+                    <Input
+                      id="address"
+                      value={customerInfo.address}
+                      onChange={(e) =>
+                        setCustomerInfo({
+                          ...customerInfo,
+                          address: e.target.value,
+                        })
+                      }
+                      placeholder="Nhập địa chỉ (không bắt buộc)"
+                    />
+                  </div>
+                </div>
               </div>
 
+              {/* Products */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label>Sản phẩm *</Label>
@@ -225,13 +261,17 @@ export function OrderDialog({ open, onOpenChange, onSave }: OrderDialogProps) {
                       <Select
                         value={item.productId.toString()}
                         onValueChange={(value) => {
-                          const selected = products.find((p) => p.id.toString() === value);
+                          const selected = products.find(
+                            (p) => p.id.toString() === value
+                          );
                           const newItems = [...items];
                           newItems[index] = {
                             ...newItems[index],
                             productId: Number(value),
                             selectedProductName: selected
-                              ? `${selected.productName} - ₫${selected.price.toLocaleString()}`
+                              ? `${selected.productName} - ${formatVND(
+                                  selected.price
+                                )}₫`
                               : "",
                           };
                           setItems(newItems);
@@ -249,8 +289,13 @@ export function OrderDialog({ open, onOpenChange, onSave }: OrderDialogProps) {
                             </div>
                           ) : (
                             products.map((product) => (
-                              <SelectItem key={product.id} value={product.id.toString()}>
-                                {product.productName} - ₫{product.price.toLocaleString()} (Còn: {product.quantity})
+                              <SelectItem
+                                key={product.id}
+                                value={product.id.toString()}
+                              >
+                                {product.productName} -{" "}
+                                {formatVND(product.price)}₫ (Còn:{" "}
+                                {product.quantity})
                               </SelectItem>
                             ))
                           )}
@@ -265,14 +310,15 @@ export function OrderDialog({ open, onOpenChange, onSave }: OrderDialogProps) {
                       }
                       placeholder="SL"
                       min="1"
-                      className="w-20"
+                      className="w-24"
                     />
                     {items.length > 1 && (
                       <Button
                         type="button"
-                        variant="ghost"
+                        variant="outline"
                         size="icon"
                         onClick={() => removeItem(index)}
+                        className="border-destructive/50 hover:bg-destructive/10 hover:border-destructive"
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
@@ -286,10 +332,8 @@ export function OrderDialog({ open, onOpenChange, onSave }: OrderDialogProps) {
                 <Input
                   id="discount"
                   type="number"
-                  value={formData.discount}
-                  onChange={(e) =>
-                    setFormData({ ...formData, discount: e.target.value })
-                  }
+                  value={discount}
+                  onChange={(e) => setDiscount(e.target.value)}
                   placeholder="Nhập số tiền giảm giá"
                   min="0"
                 />
@@ -299,7 +343,7 @@ export function OrderDialog({ open, onOpenChange, onSave }: OrderDialogProps) {
                 <div className="flex justify-between text-lg font-semibold">
                   <span>Tổng tiền:</span>
                   <span className="text-primary">
-                    ₫{calculateTotal().toLocaleString()}
+                    {formatVND(calculateTotal())}₫
                   </span>
                 </div>
               </div>

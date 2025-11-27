@@ -5,18 +5,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Loader2, AlertTriangle, Trash2, Calendar } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Loader2,
+  AlertTriangle,
+  Trash2,
+  Calendar,
+} from "lucide-react";
 import { reportService } from "@/services/reportService";
-import { stockEntryService, type StockEntry } from "@/services/stockEntryService";
+import {
+  stockEntryService,
+  type StockEntry,
+} from "@/services/stockEntryService";
 import { StockEntryDialog } from "@/components/StockEntryDialog";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import type { InventoryReport } from "@/services/reportService";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { formatVND } from "@/lib/utils";
 
 export default function InventoryPage() {
   const [inventory, setInventory] = useState<InventoryReport[]>([]);
@@ -80,17 +86,19 @@ export default function InventoryPage() {
       await stockEntryService.create(data);
       setDialogOpen(false);
       toast.success("Tạo phiếu nhập kho thành công!");
-      
+
       // Reset entries search and switch to entries tab
       setEntriesSearchTerm("");
       setCurrentPage(1);
       setActiveTab("entries");
-      
+
       // Refresh both inventory and entries
       fetchInventory();
       fetchStockEntries();
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Lỗi khi tạo phiếu nhập kho");
+      toast.error(
+        error.response?.data?.message || "Lỗi khi tạo phiếu nhập kho"
+      );
       throw error;
     }
   };
@@ -102,31 +110,38 @@ export default function InventoryPage() {
 
   const confirmDeleteEntry = async () => {
     if (!entryToDelete) return;
-    
+
     try {
       await stockEntryService.delete(entryToDelete);
       toast.success("Xóa phiếu nhập thành công!");
       fetchInventory();
       fetchStockEntries();
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Lỗi khi xóa phiếu nhập kho");
+      toast.error(
+        error.response?.data?.message || "Lỗi khi xóa phiếu nhập kho"
+      );
     } finally {
       setDeleteConfirmOpen(false);
       setEntryToDelete(null);
     }
   };
 
-  const filteredInventory = Array.isArray(inventory) 
-    ? inventory.filter((item) =>
-        item.productName.toLowerCase().includes(inventorySearchTerm.toLowerCase()) ||
-        item.category.toLowerCase().includes(inventorySearchTerm.toLowerCase())
+  const filteredInventory = Array.isArray(inventory)
+    ? inventory.filter(
+        (item) =>
+          item.productName
+            .toLowerCase()
+            .includes(inventorySearchTerm.toLowerCase()) ||
+          item.category
+            .toLowerCase()
+            .includes(inventorySearchTerm.toLowerCase())
       )
     : [];
 
-  const lowStockCount = Array.isArray(inventory) 
-    ? inventory.filter((item) => item.lowStock || item.isLowStock).length 
+  const lowStockCount = Array.isArray(inventory)
+    ? inventory.filter((item) => item.lowStock || item.isLowStock).length
     : 0;
-    
+
   const totalValue = Array.isArray(inventory)
     ? inventory.reduce((sum, item) => sum + item.price * item.quantity, 0)
     : 0;
@@ -136,13 +151,14 @@ export default function InventoryPage() {
       <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Quản lý kho</h1>
-            <p className="text-muted-foreground">Theo dõi và quản lý tồn kho</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+              Quản lý kho
+            </h1>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              Theo dõi và quản lý tồn kho
+            </p>
           </div>
-          <Button
-            className="gap-2"
-            onClick={() => setDialogOpen(true)}
-          >
+          <Button className="gap-2 w-fit" onClick={() => setDialogOpen(true)}>
             <Plus className="h-4 w-4" />
             Nhập kho
           </Button>
@@ -216,7 +232,9 @@ export default function InventoryPage() {
                     <Input
                       type="number"
                       value={lowStockThreshold}
-                      onChange={(e) => setLowStockThreshold(Number(e.target.value))}
+                      onChange={(e) =>
+                        setLowStockThreshold(Number(e.target.value))
+                      }
                       className="w-20"
                       min="1"
                     />
@@ -226,95 +244,173 @@ export default function InventoryPage() {
             </Card>
 
             <Card>
-          <CardHeader>
-            <CardTitle>
-              Danh sách tồn kho ({filteredInventory.length})
-              {lowStockCount > 0 && (
-                <span className="ml-2 text-sm font-normal text-destructive">
-                  ({lowStockCount} sản phẩm sắp hết)
-                </span>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="flex justify-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : filteredInventory.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                Không có sản phẩm nào
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-border">
-                      <th className="pb-3 text-left text-sm font-medium text-muted-foreground">
-                        Sản phẩm
-                      </th>
-                      <th className="pb-3 text-left text-sm font-medium text-muted-foreground">
-                        Danh mục
-                      </th>
-                      <th className="pb-3 text-left text-sm font-medium text-muted-foreground">
-                        Giá
-                      </th>
-                      <th className="pb-3 text-left text-sm font-medium text-muted-foreground">
-                        Tồn kho
-                      </th>
-                      <th className="pb-3 text-left text-sm font-medium text-muted-foreground">
-                        Giá trị
-                      </th>
-                      <th className="pb-3 text-left text-sm font-medium text-muted-foreground">
-                        Trạng thái
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredInventory.map((item) => (
-                      <tr
-                        key={item.id}
-                        className={`border-b border-border last:border-0 ${
-                          (item.lowStock || item.isLowStock) ? "bg-destructive/5" : ""
-                        }`}
-                      >
-                        <td className="py-4">
-                          <div className="flex items-center gap-2">
-                            {(item.lowStock || item.isLowStock) && (
-                              <AlertTriangle className="h-4 w-4 text-destructive" />
-                            )}
-                            <span className="text-sm font-medium text-foreground">
-                              {item.productName}
-                            </span>
+              <CardHeader>
+                <CardTitle>
+                  Danh sách tồn kho ({filteredInventory.length})
+                  {lowStockCount > 0 && (
+                    <span className="ml-2 text-sm font-normal text-destructive">
+                      ({lowStockCount} sản phẩm sắp hết)
+                    </span>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : filteredInventory.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Không có sản phẩm nào
+                  </div>
+                ) : (
+                  <>
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b border-border">
+                            <th className="pb-3 text-left text-sm font-medium text-muted-foreground">
+                              Sản phẩm
+                            </th>
+                            <th className="pb-3 text-left text-sm font-medium text-muted-foreground">
+                              Danh mục
+                            </th>
+                            <th className="pb-3 text-left text-sm font-medium text-muted-foreground">
+                              Giá
+                            </th>
+                            <th className="pb-3 text-left text-sm font-medium text-muted-foreground">
+                              Tồn kho
+                            </th>
+                            <th className="pb-3 text-left text-sm font-medium text-muted-foreground">
+                              Giá trị
+                            </th>
+                            <th className="pb-3 text-left text-sm font-medium text-muted-foreground">
+                              Trạng thái
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredInventory.map((item) => (
+                            <tr
+                              key={item.id}
+                              className={`border-b border-border last:border-0 ${
+                                item.lowStock || item.isLowStock
+                                  ? "bg-destructive/5"
+                                  : ""
+                              }`}
+                            >
+                              <td className="py-4">
+                                <div className="flex items-center gap-2">
+                                  {(item.lowStock || item.isLowStock) && (
+                                    <AlertTriangle className="h-4 w-4 text-destructive" />
+                                  )}
+                                  <span className="text-sm font-medium text-foreground">
+                                    {item.productName}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="py-4 text-sm text-muted-foreground">
+                                {item.category}
+                              </td>
+                              <td className="py-4 text-sm text-foreground">
+                                {formatVND(item.price)}₫
+                              </td>
+                              <td className="py-4 text-sm text-foreground">
+                                {item.quantity}
+                              </td>
+                              <td className="py-4 text-sm font-medium text-foreground">
+                                {formatVND(item.price * item.quantity)}₫
+                              </td>
+                              <td className="py-4">
+                                <Badge
+                                  variant={
+                                    item.lowStock || item.isLowStock
+                                      ? "destructive"
+                                      : "default"
+                                  }
+                                >
+                                  {item.lowStock || item.isLowStock
+                                    ? "Sắp hết"
+                                    : "Đủ hàng"}
+                                </Badge>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Mobile Card View */}
+                    <div className="md:hidden space-y-3">
+                      {filteredInventory.map((item) => (
+                        <div
+                          key={item.id}
+                          className={`rounded-lg border border-border p-4 space-y-2 ${
+                            item.lowStock || item.isLowStock
+                              ? "bg-destructive/5 border-destructive/30"
+                              : ""
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
+                              {(item.lowStock || item.isLowStock) && (
+                                <AlertTriangle className="h-4 w-4 text-destructive flex-shrink-0" />
+                              )}
+                              <div className="min-w-0">
+                                <h3 className="font-medium text-foreground truncate">
+                                  {item.productName}
+                                </h3>
+                                <p className="text-xs text-muted-foreground">
+                                  {item.category}
+                                </p>
+                              </div>
+                            </div>
+                            <Badge
+                              variant={
+                                item.lowStock || item.isLowStock
+                                  ? "destructive"
+                                  : "default"
+                              }
+                              className="text-xs flex-shrink-0"
+                            >
+                              {item.lowStock || item.isLowStock
+                                ? "Sắp hết"
+                                : "Đủ hàng"}
+                            </Badge>
                           </div>
-                        </td>
-                        <td className="py-4 text-sm text-muted-foreground">
-                          {item.category}
-                        </td>
-                        <td className="py-4 text-sm text-foreground">
-                          ₫{item.price.toLocaleString()}
-                        </td>
-                        <td className="py-4 text-sm text-foreground">
-                          {item.quantity}
-                        </td>
-                        <td className="py-4 text-sm font-medium text-foreground">
-                          ₫{(item.price * item.quantity).toLocaleString()}
-                        </td>
-                        <td className="py-4">
-                          <Badge
-                            variant={(item.lowStock || item.isLowStock) ? "destructive" : "default"}
-                          >
-                            {(item.lowStock || item.isLowStock) ? "Sắp hết" : "Đủ hàng"}
-                          </Badge>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+
+                          <div className="grid grid-cols-3 gap-2 text-sm pt-2">
+                            <div>
+                              <p className="text-xs text-muted-foreground">
+                                Giá
+                              </p>
+                              <p className="font-medium">
+                                {formatVND(item.price)}₫
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">
+                                Tồn kho
+                              </p>
+                              <p className="font-medium">{item.quantity}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">
+                                Giá trị
+                              </p>
+                              <p className="font-medium">
+                                {formatVND(item.price * item.quantity)}₫
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="entries" className="space-y-4">
@@ -350,7 +446,8 @@ export default function InventoryPage() {
                   </div>
                 ) : (
                   <>
-                    <div className="overflow-x-auto">
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block overflow-x-auto">
                       <table className="w-full">
                         <thead>
                           <tr className="border-b border-border">
@@ -396,10 +493,16 @@ export default function InventoryPage() {
                                 {entry.quantity}
                               </td>
                               <td className="py-4 text-sm text-foreground">
-                                ₫{parseFloat(entry.unitPrice.toString()).toLocaleString()}
+                                {formatVND(
+                                  parseFloat(entry.unitPrice.toString())
+                                )}
+                                ₫
                               </td>
                               <td className="py-4 text-sm font-medium text-foreground">
-                                ₫{parseFloat(entry.totalPrice.toString()).toLocaleString()}
+                                {formatVND(
+                                  parseFloat(entry.totalPrice.toString())
+                                )}
+                                ₫
                               </td>
                               <td className="py-4 text-sm text-muted-foreground">
                                 {entry.supplier || "-"}
@@ -407,14 +510,18 @@ export default function InventoryPage() {
                               <td className="py-4 text-sm text-muted-foreground">
                                 <div className="flex items-center gap-1">
                                   <Calendar className="h-3 w-3" />
-                                  {new Date(entry.entryDate).toLocaleDateString("vi-VN")}
+                                  {new Date(entry.entryDate).toLocaleDateString(
+                                    "vi-VN"
+                                  )}
                                 </div>
                               </td>
                               <td className="py-4 text-right">
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  onClick={() => handleDeleteStockEntry(entry.id)}
+                                  onClick={() =>
+                                    handleDeleteStockEntry(entry.id)
+                                  }
                                   title="Xóa phiếu nhập"
                                 >
                                   <Trash2 className="h-4 w-4 text-destructive" />
@@ -425,6 +532,84 @@ export default function InventoryPage() {
                         </tbody>
                       </table>
                     </div>
+
+                    {/* Mobile Card View */}
+                    <div className="md:hidden space-y-3">
+                      {stockEntries.map((entry) => (
+                        <div
+                          key={entry.id}
+                          className="rounded-lg border border-border p-4 space-y-3"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <h3 className="font-medium text-foreground">
+                                {entry.entryCode}
+                              </h3>
+                              <p className="text-xs text-muted-foreground truncate">
+                                {entry.product?.productName}
+                              </p>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteStockEntry(entry.id)}
+                              className="h-8 px-2 text-destructive hover:text-destructive flex-shrink-0"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2 text-sm">
+                            <div>
+                              <p className="text-xs text-muted-foreground">
+                                Số lượng
+                              </p>
+                              <p className="font-medium">{entry.quantity}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">
+                                Đơn giá
+                              </p>
+                              <p className="font-medium">
+                                {formatVND(
+                                  parseFloat(entry.unitPrice.toString())
+                                )}
+                                ₫
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">
+                                Tổng tiền
+                              </p>
+                              <p className="font-medium">
+                                {formatVND(
+                                  parseFloat(entry.totalPrice.toString())
+                                )}
+                                ₫
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">
+                                Ngày nhập
+                              </p>
+                              <p className="font-medium flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                {new Date(entry.entryDate).toLocaleDateString(
+                                  "vi-VN"
+                                )}
+                              </p>
+                            </div>
+                          </div>
+
+                          {entry.supplier && (
+                            <div className="text-xs text-muted-foreground pt-2 border-t border-border">
+                              NCC: {entry.supplier}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
                     {totalPages > 1 && (
                       <div className="flex justify-center gap-2 mt-4">
                         <Button

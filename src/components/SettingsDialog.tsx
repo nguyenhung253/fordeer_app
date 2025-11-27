@@ -55,13 +55,15 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
       />
 
       {/* Dialog */}
-      <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-4xl -translate-x-1/2 -translate-y-1/2 rounded-lg border bg-background shadow-lg">
-        <div className="flex h-[600px] flex-col">
+      <div className="fixed inset-4 sm:inset-auto sm:left-1/2 sm:top-1/2 z-50 w-auto sm:w-full sm:max-w-4xl sm:-translate-x-1/2 sm:-translate-y-1/2 rounded-lg border bg-background shadow-lg overflow-hidden">
+        <div className="flex h-full sm:h-[600px] flex-col">
           {/* Header */}
-          <div className="flex items-center justify-between border-b px-6 py-4">
+          <div className="flex items-center justify-between border-b px-4 sm:px-6 py-3 sm:py-4">
             <div>
-              <h2 className="text-2xl font-bold tracking-tight">Cài đặt</h2>
-              <p className="text-sm text-muted-foreground">
+              <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
+                Cài đặt
+              </h2>
+              <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
                 Quản lý cài đặt ứng dụng và tùy chọn của bạn
               </p>
             </div>
@@ -74,102 +76,114 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
           </div>
 
           {/* Content */}
-          <div className="flex flex-1 overflow-hidden">
-            {/* Sidebar */}
-            <aside className="w-56 border-r bg-muted/30 p-4">
-              <nav className="space-y-1">
+          <div className="flex flex-col sm:flex-row flex-1 overflow-hidden">
+            {/* Sidebar - horizontal on mobile, vertical on desktop */}
+            <aside className="border-b sm:border-b-0 sm:border-r bg-muted/30 p-2 sm:p-4 sm:w-56 flex-shrink-0">
+              <nav className="flex sm:flex-col gap-1 overflow-x-auto sm:overflow-x-visible">
                 {tabs.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
                     className={cn(
-                      "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                      "flex items-center gap-2 sm:gap-3 rounded-lg px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-medium transition-colors whitespace-nowrap sm:w-full",
                       activeTab === tab.id
                         ? "bg-accent text-accent-foreground shadow-sm"
                         : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
                     )}
                   >
                     <tab.icon className="h-4 w-4" />
-                    {tab.label}
+                    <span className="hidden xs:inline sm:inline">
+                      {tab.label}
+                    </span>
                   </button>
                 ))}
               </nav>
             </aside>
 
             {/* Main Content */}
-            <div className="flex-1 overflow-y-auto p-6">
-              <div className="space-y-6">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+              <div className="space-y-4 sm:space-y-6">
                 {activeTab === "general" && (
-                  <div className="space-y-6">
-                    <div className="rounded-lg border bg-card p-6 space-y-6">
+                  <div className="space-y-4 sm:space-y-6">
+                    <div className="rounded-lg border bg-card p-4 sm:p-6 space-y-4 sm:space-y-6">
                       <div>
-                        <h3 className="text-lg font-medium">Giao diện</h3>
-                        <p className="text-sm text-muted-foreground">
+                        <h3 className="text-base sm:text-lg font-medium">
+                          Giao diện
+                        </h3>
+                        <p className="text-xs sm:text-sm text-muted-foreground">
                           Tùy chỉnh giao diện ứng dụng
                         </p>
                       </div>
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="grid grid-cols-3 gap-2 sm:gap-4">
                         <button
                           onClick={() => setTheme("light")}
                           className={cn(
-                            "flex flex-col items-center gap-2 rounded-lg border-2 p-4 hover:bg-accent transition-all",
+                            "flex flex-col items-center gap-1 sm:gap-2 rounded-lg border-2 p-2 sm:p-4 hover:bg-accent transition-all",
                             theme === "light"
                               ? "border-primary ring-1 ring-primary bg-primary/5"
                               : "border-muted"
                           )}
                         >
-                          <div className="h-6 w-6 rounded-full bg-white border shadow-sm" />
-                          <span className="text-sm font-medium">Sáng</span>
+                          <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-white border shadow-sm" />
+                          <span className="text-xs sm:text-sm font-medium">
+                            Sáng
+                          </span>
                         </button>
                         <button
                           onClick={() => setTheme("dark")}
                           className={cn(
-                            "flex flex-col items-center gap-2 rounded-lg border-2 p-4 hover:bg-accent transition-all",
+                            "flex flex-col items-center gap-1 sm:gap-2 rounded-lg border-2 p-2 sm:p-4 hover:bg-accent transition-all",
                             theme === "dark"
                               ? "border-primary ring-1 ring-primary bg-primary/5"
                               : "border-muted"
                           )}
                         >
-                          <div className="h-6 w-6 rounded-full bg-slate-950 border shadow-sm" />
-                          <span className="text-sm font-medium">Tối</span>
+                          <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-slate-950 border shadow-sm" />
+                          <span className="text-xs sm:text-sm font-medium">
+                            Tối
+                          </span>
                         </button>
                         <button
                           onClick={() => setTheme("system")}
                           className={cn(
-                            "flex flex-col items-center gap-2 rounded-lg border-2 p-4 hover:bg-accent transition-all",
+                            "flex flex-col items-center gap-1 sm:gap-2 rounded-lg border-2 p-2 sm:p-4 hover:bg-accent transition-all",
                             theme === "system"
                               ? "border-primary ring-1 ring-primary bg-primary/5"
                               : "border-muted"
                           )}
                         >
-                          <div className="h-6 w-6 rounded-full bg-gradient-to-r from-white to-slate-950 border shadow-sm" />
-                          <span className="text-sm font-medium">Hệ thống</span>
+                          <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-gradient-to-r from-white to-slate-950 border shadow-sm" />
+                          <span className="text-xs sm:text-sm font-medium">
+                            Hệ thống
+                          </span>
                         </button>
                       </div>
                     </div>
 
-                    <div className="rounded-lg border bg-card p-6 space-y-6">
+                    <div className="rounded-lg border bg-card p-4 sm:p-6 space-y-4 sm:space-y-6">
                       <div>
-                        <h3 className="text-lg font-medium">
+                        <h3 className="text-base sm:text-lg font-medium">
                           Ngôn ngữ & Khu vực
                         </h3>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs sm:text-sm text-muted-foreground">
                           Cài đặt ngôn ngữ và định dạng ngày giờ
                         </p>
                       </div>
-                      <div className="space-y-4">
+                      <div className="space-y-3 sm:space-y-4">
                         <div className="grid gap-2">
-                          <label className="text-sm font-medium">
+                          <label className="text-xs sm:text-sm font-medium">
                             Ngôn ngữ
                           </label>
-                          <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                          <select className="flex h-9 sm:h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-xs sm:text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                             <option value="vi">Tiếng Việt</option>
                             <option value="en">English</option>
                           </select>
                         </div>
                         <div className="grid gap-2">
-                          <label className="text-sm font-medium">Múi giờ</label>
-                          <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                          <label className="text-xs sm:text-sm font-medium">
+                            Múi giờ
+                          </label>
+                          <select className="flex h-9 sm:h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-xs sm:text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                             <option value="asia/hcm">
                               (GMT+07:00) Bangkok, Hanoi, Jakarta
                             </option>
@@ -181,25 +195,25 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                 )}
 
                 {activeTab === "notifications" && (
-                  <div className="space-y-6">
-                    <div className="rounded-lg border bg-card p-6 space-y-6">
+                  <div className="space-y-4 sm:space-y-6">
+                    <div className="rounded-lg border bg-card p-4 sm:p-6 space-y-4 sm:space-y-6">
                       <div>
-                        <h3 className="text-lg font-medium">
+                        <h3 className="text-base sm:text-lg font-medium">
                           Cài đặt thông báo
                         </h3>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs sm:text-sm text-muted-foreground">
                           Chọn cách bạn muốn nhận thông báo
                         </p>
                       </div>
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between space-x-2">
-                          <div className="flex items-center space-x-4">
-                            <Mail className="h-5 w-5 text-muted-foreground" />
-                            <div className="space-y-0.5">
-                              <label className="text-sm font-medium">
+                      <div className="space-y-3 sm:space-y-4">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+                            <Mail className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0" />
+                            <div className="space-y-0.5 min-w-0">
+                              <label className="text-xs sm:text-sm font-medium block truncate">
                                 Email thông báo
                               </label>
-                              <p className="text-sm text-muted-foreground">
+                              <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
                                 Nhận thông báo qua email
                               </p>
                             </div>
@@ -213,17 +227,17 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                                 email: e.target.checked,
                               })
                             }
-                            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary flex-shrink-0"
                           />
                         </div>
-                        <div className="flex items-center justify-between space-x-2">
-                          <div className="flex items-center space-x-4">
-                            <Smartphone className="h-5 w-5 text-muted-foreground" />
-                            <div className="space-y-0.5">
-                              <label className="text-sm font-medium">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+                            <Smartphone className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0" />
+                            <div className="space-y-0.5 min-w-0">
+                              <label className="text-xs sm:text-sm font-medium block truncate">
                                 Thông báo đẩy
                               </label>
-                              <p className="text-sm text-muted-foreground">
+                              <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
                                 Nhận thông báo trên trình duyệt
                               </p>
                             </div>
@@ -237,17 +251,17 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                                 push: e.target.checked,
                               })
                             }
-                            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary flex-shrink-0"
                           />
                         </div>
-                        <div className="flex items-center justify-between space-x-2">
-                          <div className="flex items-center space-x-4">
-                            <Volume2 className="h-5 w-5 text-muted-foreground" />
-                            <div className="space-y-0.5">
-                              <label className="text-sm font-medium">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+                            <Volume2 className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0" />
+                            <div className="space-y-0.5 min-w-0">
+                              <label className="text-xs sm:text-sm font-medium block truncate">
                                 Tiếp thị
                               </label>
-                              <p className="text-sm text-muted-foreground">
+                              <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
                                 Nhận email về các tính năng mới
                               </p>
                             </div>
@@ -261,7 +275,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                                 marketing: e.target.checked,
                               })
                             }
-                            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary flex-shrink-0"
                           />
                         </div>
                       </div>
@@ -270,25 +284,27 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                 )}
 
                 {(activeTab === "account" || activeTab === "security") && (
-                  <div className="flex h-[400px] items-center justify-center rounded-lg border border-dashed p-8 text-center">
+                  <div className="flex h-[250px] sm:h-[400px] items-center justify-center rounded-lg border border-dashed p-4 sm:p-8 text-center">
                     <div className="mx-auto flex max-w-[420px] flex-col items-center justify-center text-center">
-                      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
+                      <div className="flex h-14 w-14 sm:h-20 sm:w-20 items-center justify-center rounded-full bg-muted">
                         {activeTab === "account" ? (
-                          <User className="h-10 w-10 text-muted-foreground" />
+                          <User className="h-7 w-7 sm:h-10 sm:w-10 text-muted-foreground" />
                         ) : (
-                          <Shield className="h-10 w-10 text-muted-foreground" />
+                          <Shield className="h-7 w-7 sm:h-10 sm:w-10 text-muted-foreground" />
                         )}
                       </div>
-                      <h3 className="mt-4 text-lg font-semibold">
+                      <h3 className="mt-3 sm:mt-4 text-base sm:text-lg font-semibold">
                         Tính năng đang phát triển
                       </h3>
-                      <p className="mb-4 mt-2 text-sm text-muted-foreground">
+                      <p className="mb-3 sm:mb-4 mt-1 sm:mt-2 text-xs sm:text-sm text-muted-foreground px-2">
                         Chúng tôi đang làm việc để mang đến cho bạn trải nghiệm
                         tốt nhất. Vui lòng quay lại sau.
                       </p>
                       <Button
                         variant="outline"
+                        size="sm"
                         onClick={() => setActiveTab("general")}
+                        className="text-xs sm:text-sm"
                       >
                         Quay lại cài đặt chung
                       </Button>
@@ -300,11 +316,22 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-end gap-4 border-t px-6 py-4">
-            <Button variant="outline" onClick={handleCancel}>
-              Hủy thay đổi
+          <div className="flex items-center justify-end gap-2 sm:gap-4 border-t px-4 sm:px-6 py-3 sm:py-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCancel}
+              className="text-xs sm:text-sm"
+            >
+              Hủy
             </Button>
-            <Button onClick={handleSave}>Lưu cài đặt</Button>
+            <Button
+              size="sm"
+              onClick={handleSave}
+              className="text-xs sm:text-sm"
+            >
+              Lưu cài đặt
+            </Button>
           </div>
         </div>
       </div>

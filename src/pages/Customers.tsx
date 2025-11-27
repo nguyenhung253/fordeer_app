@@ -5,7 +5,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Edit, Trash2, Mail, Phone, Loader2, RotateCcw } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Edit,
+  Trash2,
+  Mail,
+  Phone,
+  Loader2,
+  RotateCcw,
+} from "lucide-react";
 import { customerService } from "@/services/customerService";
 import { CustomerDialog } from "@/components/CustomerDialog";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -18,7 +27,9 @@ export default function CustomersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
+    null
+  );
   const [showInactive, setShowInactive] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [customerToDelete, setCustomerToDelete] = useState<number | null>(null);
@@ -35,7 +46,7 @@ export default function CustomersPage() {
         page: 1,
         limit: 9999, // Get all customers
       });
-      
+
       const allCustomers = allCustomersResponse.data;
       setStats({
         total: allCustomersResponse.pagination.totalItems,
@@ -80,7 +91,7 @@ export default function CustomersPage() {
 
   const confirmDelete = async () => {
     if (!customerToDelete) return;
-    
+
     try {
       await customerService.delete(customerToDelete);
       toast.success("Xóa khách hàng thành công!");
@@ -101,7 +112,9 @@ export default function CustomersPage() {
       fetchCustomers();
       fetchStats(); // Update stats after restore
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Lỗi khi khôi phục khách hàng");
+      toast.error(
+        error.response?.data?.message || "Lỗi khi khôi phục khách hàng"
+      );
     }
   };
 
@@ -133,15 +146,15 @@ export default function CustomersPage() {
       <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
               Quản lý khách hàng
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-sm sm:text-base text-muted-foreground">
               Quản lý thông tin khách hàng
             </p>
           </div>
           <Button
-            className="gap-2"
+            className="gap-2 w-fit"
             onClick={() => {
               setSelectedCustomer(null);
               setDialogOpen(true);
@@ -190,7 +203,9 @@ export default function CustomersPage() {
                 <div className="text-2xl font-bold text-foreground">
                   {stats.inactive}
                 </div>
-                <p className="text-xs text-muted-foreground">Khách hàng inactive</p>
+                <p className="text-xs text-muted-foreground">
+                  Khách hàng inactive
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -236,7 +251,8 @@ export default function CustomersPage() {
               </div>
             ) : (
               <>
-                <div className="overflow-x-auto">
+                {/* Desktop Table View */}
+                <div className="hidden md:block overflow-x-auto">
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-border">
@@ -300,7 +316,9 @@ export default function CustomersPage() {
                           </td>
                           <td className="py-4">
                             <Badge
-                              variant={customer.isActive ? "default" : "destructive"}
+                              variant={
+                                customer.isActive ? "default" : "destructive"
+                              }
                             >
                               {customer.isActive ? "Hoạt động" : "Đã xóa"}
                             </Badge>
@@ -341,6 +359,89 @@ export default function CustomersPage() {
                     </tbody>
                   </table>
                 </div>
+
+                {/* Mobile Card View */}
+                <div className="md:hidden space-y-3">
+                  {customers.map((customer) => (
+                    <div
+                      key={customer.id}
+                      className="rounded-lg border border-border p-4 space-y-3"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 flex-shrink-0">
+                            <span className="text-sm font-semibold text-primary">
+                              {customer.fullName.charAt(0)}
+                            </span>
+                          </div>
+                          <div className="min-w-0">
+                            <h3 className="font-medium text-foreground truncate">
+                              {customer.fullName}
+                            </h3>
+                            <p className="text-xs text-muted-foreground">
+                              {customer.customerCode}
+                            </p>
+                          </div>
+                        </div>
+                        <Badge
+                          variant={
+                            customer.isActive ? "default" : "destructive"
+                          }
+                          className="text-xs flex-shrink-0"
+                        >
+                          {customer.isActive ? "Hoạt động" : "Đã xóa"}
+                        </Badge>
+                      </div>
+
+                      <div className="space-y-1 text-sm">
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Mail className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{customer.email}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Phone className="h-3 w-3 flex-shrink-0" />
+                          <span>{customer.phone}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end gap-1 pt-2 border-t border-border">
+                        {customer.isActive ? (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEdit(customer)}
+                              className="h-8 px-2"
+                            >
+                              <Edit className="h-4 w-4 mr-1" />
+                              Sửa
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDelete(customer.id)}
+                              className="h-8 px-2 text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Xóa
+                            </Button>
+                          </>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRestore(customer.id)}
+                            className="h-8 px-2"
+                          >
+                            <RotateCcw className="h-4 w-4 mr-1 text-primary" />
+                            Khôi phục
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
                 {totalPages > 1 && (
                   <div className="flex justify-center gap-2 mt-4">
                     <Button
@@ -387,7 +488,6 @@ export default function CustomersPage() {
         cancelText="Hủy"
         variant="destructive"
       />
-      
     </DashboardLayout>
   );
 }

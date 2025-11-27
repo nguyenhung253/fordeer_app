@@ -13,6 +13,8 @@ import {
   LogOut,
   User,
   ChevronDown,
+  ChevronsLeft,
+  ChevronsRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { authService } from "@/services/authService";
@@ -33,6 +35,7 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -57,15 +60,32 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 transform bg-sidebar transition-transform duration-300 ease-in-out lg:translate-x-0",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          "fixed inset-y-0 left-0 z-50 transform bg-sidebar transition-all duration-300 ease-in-out lg:translate-x-0",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full",
+          sidebarCollapsed ? "lg:w-16" : "w-64"
         )}
       >
         <div className="flex h-full flex-col">
           {/* Logo */}
-          <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-6">
-            <img src="/Vector.png" alt="Logo" className="h-8 w-8" />
-            <div>
+          <div
+            className={cn(
+              "flex h-16 items-center border-b border-sidebar-border gap-3",
+              sidebarCollapsed ? "px-5 justify-center" : "px-6"
+            )}
+          >
+            <img
+              src="/Vector.png"
+              alt="Logo"
+              className="h-8 w-8 flex-shrink-0"
+            />
+            <div
+              className={cn(
+                "whitespace-nowrap overflow-hidden transition-all duration-300",
+                sidebarCollapsed
+                  ? "lg:w-0 lg:opacity-0"
+                  : "lg:w-auto lg:opacity-100"
+              )}
+            >
               <h1 className="text-lg font-bold text-sidebar-foreground">
                 FORDEER
               </h1>
@@ -92,17 +112,21 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
                     isActive
                       ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
-                      : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground hover:shadow-sm"
+                      : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground hover:shadow-sm",
+                    sidebarCollapsed && "lg:justify-center lg:px-2"
                   )}
                   onClick={() => setSidebarOpen(false)}
+                  title={sidebarCollapsed ? item.name : undefined}
                 >
                   <item.icon
                     className={cn(
-                      "h-5 w-5 transition-transform duration-200",
+                      "h-5 w-5 transition-transform duration-200 flex-shrink-0",
                       isActive ? "scale-110" : "group-hover:scale-110"
                     )}
                   />
-                  {item.name}
+                  <span className={cn(sidebarCollapsed && "lg:hidden")}>
+                    {item.name}
+                  </span>
                 </Link>
               );
             })}
@@ -110,13 +134,18 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
           {/* Footer */}
           <div className="border-t border-sidebar-border p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sidebar-primary">
-                <span className="text-sm font-semibold text-sidebar-primary-foreground">
-                  AD
-                </span>
-              </div>
-              <div className="flex-1">
+            <div
+              className={cn(
+                "flex items-center gap-3",
+                sidebarCollapsed && "lg:justify-center"
+              )}
+            >
+              <img
+                src="https://www.galeriemichael.com/wp-content/uploads/2025/07/hinh-anh-meme-meo-giang-sinh-dang-yeu.jpg"
+                alt="Avatar"
+                className="h-10 w-10 rounded-full object-cover flex-shrink-0 ring-2 ring-blue-500 ring-offset-2 ring-offset-sidebar"
+              />
+              <div className={cn("flex-1", sidebarCollapsed && "lg:hidden")}>
                 <p className="text-sm font-medium text-sidebar-foreground">
                   {currentUser?.username || "Admin"}
                 </p>
@@ -130,9 +159,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       </aside>
 
       {/* Main content */}
-      <div className="lg:pl-64">
+      <div
+        className={cn(
+          "transition-all duration-300",
+          sidebarCollapsed ? "lg:pl-16" : "lg:pl-64"
+        )}
+      >
         {/* Top bar */}
         <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border bg-card px-4 lg:px-6">
+          {/* Mobile menu button */}
           <Button
             variant="ghost"
             size="icon"
@@ -145,6 +180,21 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <Menu className="h-6 w-6" />
             )}
           </Button>
+
+          {/* Desktop toggle button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hidden lg:flex h-8 w-8 text-muted-foreground hover:text-foreground"
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          >
+            {sidebarCollapsed ? (
+              <ChevronsRight className="h-5 w-5" />
+            ) : (
+              <ChevronsLeft className="h-5 w-5" />
+            )}
+          </Button>
+
           <div className="flex-1">
             <h2 className="text-lg font-semibold text-foreground">
               {navigation.find((item) => item.href === pathname)?.name ||
@@ -158,9 +208,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               onClick={() => setProfileOpen(!profileOpen)}
               className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-accent/50 transition-colors"
             >
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                <User className="h-4 w-4" />
-              </div>
+              <img
+                src="https://www.galeriemichael.com/wp-content/uploads/2025/07/hinh-anh-meme-meo-giang-sinh-dang-yeu.jpg"
+                alt="Avatar"
+                className="h-8 w-8 rounded-full object-cover ring-2 ring-blue-500 ring-offset-2 ring-offset-card"
+              />
               <div className="hidden sm:block text-left">
                 <p className="text-sm font-medium text-foreground">
                   {currentUser?.username || "Admin"}
