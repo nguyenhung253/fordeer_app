@@ -287,11 +287,19 @@ export default function CustomersPage() {
                           </td>
                           <td className="py-4">
                             <div className="flex items-center gap-3">
-                              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                                <span className="text-sm font-semibold text-primary">
-                                  {customer.fullName.charAt(0)}
-                                </span>
-                              </div>
+                              {customer.avatarUrl ? (
+                                <img
+                                  src={customer.avatarUrl}
+                                  alt={customer.fullName}
+                                  className="h-10 w-10 rounded-full object-cover"
+                                />
+                              ) : (
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                                  <span className="text-sm font-semibold text-primary">
+                                    {customer.fullName.charAt(0)}
+                                  </span>
+                                </div>
+                              )}
                               <div>
                                 <p className="text-sm font-medium text-foreground">
                                   {customer.fullName}
@@ -369,11 +377,19 @@ export default function CustomersPage() {
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 flex-shrink-0">
-                            <span className="text-sm font-semibold text-primary">
-                              {customer.fullName.charAt(0)}
-                            </span>
-                          </div>
+                          {customer.avatarUrl ? (
+                            <img
+                              src={customer.avatarUrl}
+                              alt={customer.fullName}
+                              className="h-10 w-10 rounded-full object-cover flex-shrink-0"
+                            />
+                          ) : (
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 flex-shrink-0">
+                              <span className="text-sm font-semibold text-primary">
+                                {customer.fullName.charAt(0)}
+                              </span>
+                            </div>
+                          )}
                           <div className="min-w-0">
                             <h3 className="font-medium text-foreground truncate">
                               {customer.fullName}

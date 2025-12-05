@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -18,13 +18,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { ImagePlus, X } from "lucide-react";
 import type { Product } from "@/types/api";
 
 interface ProductDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   product?: Product | null;
-  onSave?: (product: any) => void;
+  onSave?: (formData: FormData) => void;
 }
 
 export function ProductDialog({
@@ -40,6 +41,9 @@ export function ProductDialog({
     quantity: "",
     description: "",
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (product) {
@@ -50,6 +54,7 @@ export function ProductDialog({
         quantity: product.quantity.toString(),
         description: product.description || "",
       });
+      setImagePreview(product.productUrl || null);
     } else {
       setFormData({
         productName: "",
@@ -58,24 +63,51 @@ export function ProductDialog({
         quantity: "",
         description: "",
       });
+      setImagePreview(null);
     }
+    setImageFile(null);
   }, [product, open]);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(product?.productUrl || null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (onSave) {
-      onSave({
-        ...formData,
-        price: parseFloat(formData.price) || 0,
-        quantity: parseInt(formData.quantity) || 0,
-      });
+      const data = new FormData();
+      data.append("productName", formData.productName);
+      data.append("category", formData.category);
+      data.append("price", formData.price);
+      data.append("quantity", formData.quantity);
+      data.append("description", formData.description);
+      if (imageFile) {
+        data.append("image", imageFile);
+      }
+      onSave(data);
     }
-    onOpenChange(false);
+    // Don't close dialog here - let parent handle it after save completes
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {product ? "Chỉnh sửa sản phẩm" : "Thêm sản phẩm mới"}
@@ -88,6 +120,57 @@ export function ProductDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
+            {/* Image Upload */}
+            <div className="grid gap-2">
+              <Label>Hình ảnh sản phẩm</Label>
+              <div className="flex items-center gap-4">
+                {imagePreview ? (
+                  <div className="relative">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="h-24 w-24 rounded-lg object-cover border"
+                    />
+                    <button
+                      type="button"
+                      onClick={removeImage}
+                      className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/90"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="h-24 w-24 rounded-lg border-2 border-dashed border-muted-foreground/25 flex flex-col items-center justify-center gap-1 hover:border-primary/50 transition-colors"
+                  >
+                    <ImagePlus className="h-6 w-6 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">
+                      Tải ảnh
+                    </span>
+                  </button>
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
+                {imagePreview && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    Đổi ảnh
+                  </Button>
+                )}
+              </div>
+            </div>
+
             <div className="grid gap-2">
               <Label htmlFor="productName">Tên sản phẩm</Label>
               <Input

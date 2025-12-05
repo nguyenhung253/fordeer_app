@@ -26,7 +26,6 @@ const navigation = [
   { name: "Khách hàng", href: "/customers", icon: Users },
   { name: "Đơn hàng", href: "/orders", icon: ShoppingCart },
   { name: "Nhập kho", href: "/inventory", icon: PackageOpen },
-  { name: "Tạo tài khoản", href: "/register", icon: User, adminOnly: true },
 ];
 
 interface DashboardLayoutProps {
@@ -98,11 +97,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           {/* Navigation */}
           <nav className="flex-1 space-y-1 px-3 py-4">
             {navigation.map((item) => {
-              // Hide admin-only items if user is not admin
-              if (item.adminOnly && currentUser?.role !== "admin") {
-                return null;
-              }
-
               const isActive = pathname === item.href;
               return (
                 <Link
@@ -111,8 +105,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   className={cn(
                     "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
                     isActive
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
-                      : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground hover:shadow-sm",
+                      ? "bg-white/10 text-sidebar-foreground"
+                      : "text-sidebar-foreground/70 hover:bg-white/5 hover:text-sidebar-foreground",
                     sidebarCollapsed && "lg:justify-center lg:px-2"
                   )}
                   onClick={() => setSidebarOpen(false)}
@@ -140,11 +134,17 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 sidebarCollapsed && "lg:justify-center"
               )}
             >
-              <img
-                src="https://www.galeriemichael.com/wp-content/uploads/2025/07/hinh-anh-meme-meo-giang-sinh-dang-yeu.jpg"
-                alt="Avatar"
-                className="h-10 w-10 rounded-full object-cover flex-shrink-0 ring-2 ring-blue-500 ring-offset-2 ring-offset-sidebar"
-              />
+              {currentUser?.avatarUrl ? (
+                <img
+                  src={currentUser.avatarUrl}
+                  alt="Avatar"
+                  className="h-10 w-10 rounded-full object-cover flex-shrink-0 ring-2 ring-blue-500 ring-offset-2 ring-offset-sidebar"
+                />
+              ) : (
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 ring-2 ring-primary/50 ring-offset-2 ring-offset-sidebar">
+                  <User className="h-5 w-5 text-primary" />
+                </div>
+              )}
               <div className={cn("flex-1", sidebarCollapsed && "lg:hidden")}>
                 <p className="text-sm font-medium text-sidebar-foreground">
                   {currentUser?.username || "Admin"}
@@ -206,17 +206,24 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="relative">
             <button
               onClick={() => setProfileOpen(!profileOpen)}
-              className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-accent/50 transition-colors"
+              className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-accent transition-colors"
             >
-              <img
-                src="https://www.galeriemichael.com/wp-content/uploads/2025/07/hinh-anh-meme-meo-giang-sinh-dang-yeu.jpg"
-                alt="Avatar"
-                className="h-8 w-8 rounded-full object-cover ring-2 ring-blue-500 ring-offset-2 ring-offset-card"
-              />
+              {currentUser?.avatarUrl ? (
+                <img
+                  src={currentUser.avatarUrl}
+                  alt="Avatar"
+                  className="h-8 w-8 rounded-full object-cover ring-2 ring-blue-500 ring-offset-2 ring-offset-card"
+                />
+              ) : (
+                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center ring-2 ring-primary/50 ring-offset-2 ring-offset-card">
+                  <User className="h-4 w-4 text-primary" />
+                </div>
+              )}
               <div className="hidden sm:block text-left">
                 <p className="text-sm font-medium text-foreground">
                   {currentUser?.username || "Admin"}
                 </p>
+
                 <p className="text-xs text-muted-foreground">
                   {currentUser?.email || "admin@fordeer.com"}
                 </p>

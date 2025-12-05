@@ -239,7 +239,7 @@ export function OrderDialog({ open, onOpenChange, onSave }: OrderDialogProps) {
                           address: e.target.value,
                         })
                       }
-                      placeholder="Nhập địa chỉ (không bắt buộc)"
+                      placeholder="Nhập địa chỉ "
                     />
                   </div>
                 </div>

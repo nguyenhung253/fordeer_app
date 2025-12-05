@@ -30,6 +30,7 @@ export interface Customer {
   phone: string;
   birthYear?: number;
   address?: string;
+  avatarUrl?: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -64,6 +65,7 @@ export interface Product {
   quantity: number;
   category: string;
   description?: string;
+  productUrl?: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -74,6 +76,7 @@ export interface User {
   username: string;
   email: string;
   role: "admin" | "staff";
+  avatarUrl?: string;
 }
 
 export interface LoginRequest {

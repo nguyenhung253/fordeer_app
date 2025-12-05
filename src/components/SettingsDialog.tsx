@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Bell,
@@ -9,6 +9,9 @@ import {
   Volume2,
   Mail,
   X,
+  Sun,
+  Moon,
+  Monitor,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -18,6 +21,29 @@ interface SettingsDialogProps {
   onClose: () => void;
 }
 
+// Theme helper functions
+const getStoredTheme = () => localStorage.getItem("theme") || "light";
+const setStoredTheme = (theme: string) => localStorage.setItem("theme", theme);
+
+const applyTheme = (theme: string) => {
+  const root = document.documentElement;
+  if (theme === "dark") {
+    root.classList.add("dark");
+  } else if (theme === "light") {
+    root.classList.remove("dark");
+  } else {
+    // system
+    const prefersDark = window.matchMedia(
+      "(prefers-color-scheme: dark)"
+    ).matches;
+    if (prefersDark) {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+  }
+};
+
 export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
   const [activeTab, setActiveTab] = useState("general");
   const [notifications, setNotifications] = useState({
@@ -25,7 +51,18 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
     push: true,
     marketing: false,
   });
-  const [theme, setTheme] = useState("light");
+  const [theme, setTheme] = useState(getStoredTheme());
+
+  useEffect(() => {
+    // Apply theme on mount
+    applyTheme(getStoredTheme());
+  }, []);
+
+  const handleThemeChange = (newTheme: string) => {
+    setTheme(newTheme);
+    setStoredTheme(newTheme);
+    applyTheme(newTheme);
+  };
 
   const tabs = [
     { id: "general", label: "Chung", icon: Globe },
@@ -116,7 +153,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                       </div>
                       <div className="grid grid-cols-3 gap-2 sm:gap-4">
                         <button
-                          onClick={() => setTheme("light")}
+                          onClick={() => handleThemeChange("light")}
                           className={cn(
                             "flex flex-col items-center gap-1 sm:gap-2 rounded-lg border-2 p-2 sm:p-4 hover:bg-accent transition-all",
                             theme === "light"
@@ -124,13 +161,13 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                               : "border-muted"
                           )}
                         >
-                          <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-white border shadow-sm" />
+                          <Sun className="h-5 w-5 sm:h-6 sm:w-6 text-amber-500" />
                           <span className="text-xs sm:text-sm font-medium">
                             Sáng
                           </span>
                         </button>
                         <button
-                          onClick={() => setTheme("dark")}
+                          onClick={() => handleThemeChange("dark")}
                           className={cn(
                             "flex flex-col items-center gap-1 sm:gap-2 rounded-lg border-2 p-2 sm:p-4 hover:bg-accent transition-all",
                             theme === "dark"
@@ -138,13 +175,13 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                               : "border-muted"
                           )}
                         >
-                          <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-slate-950 border shadow-sm" />
+                          <Moon className="h-5 w-5 sm:h-6 sm:w-6 text-slate-700" />
                           <span className="text-xs sm:text-sm font-medium">
                             Tối
                           </span>
                         </button>
                         <button
-                          onClick={() => setTheme("system")}
+                          onClick={() => handleThemeChange("system")}
                           className={cn(
                             "flex flex-col items-center gap-1 sm:gap-2 rounded-lg border-2 p-2 sm:p-4 hover:bg-accent transition-all",
                             theme === "system"
@@ -152,7 +189,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                               : "border-muted"
                           )}
                         >
-                          <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-gradient-to-r from-white to-slate-950 border shadow-sm" />
+                          <Monitor className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500" />
                           <span className="text-xs sm:text-sm font-medium">
                             Hệ thống
                           </span>

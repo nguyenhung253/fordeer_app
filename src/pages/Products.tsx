@@ -13,6 +13,7 @@ import {
   Loader2,
   Eye,
   ChevronUp,
+  ImageOff,
 } from "lucide-react";
 import { productService } from "@/services/productService";
 import { ProductDialog } from "@/components/ProductDialog";
@@ -105,9 +106,10 @@ export default function ProductsPage() {
         await productService.create(productData);
         toast.success("Thêm sản phẩm thành công!");
       }
-      fetchProducts();
       setDialogOpen(false);
       setSelectedProduct(null);
+      // Fetch products after dialog closes to ensure fresh data
+      await fetchProducts();
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Lỗi khi lưu sản phẩm");
     }
@@ -178,6 +180,9 @@ export default function ProductsPage() {
                           Tên sản phẩm
                         </th>
                         <th className="pb-3 text-left text-sm font-medium text-muted-foreground">
+                          Ảnh
+                        </th>
+                        <th className="pb-3 text-left text-sm font-medium text-muted-foreground">
                           Danh mục
                         </th>
                         <th className="pb-3 text-left text-sm font-medium text-muted-foreground">
@@ -200,6 +205,19 @@ export default function ProductsPage() {
                           <tr className="border-b border-border last:border-0">
                             <td className="py-4 text-sm font-medium text-foreground">
                               {product.productName}
+                            </td>
+                            <td className="py-4">
+                              {product.productUrl ? (
+                                <img
+                                  src={product.productUrl}
+                                  alt={product.productName}
+                                  className="h-12 w-12 rounded-lg object-cover"
+                                />
+                              ) : (
+                                <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center">
+                                  <ImageOff className="h-5 w-5 text-muted-foreground" />
+                                </div>
+                              )}
                             </td>
                             <td className="py-4 text-sm text-muted-foreground">
                               {product.category}
@@ -260,7 +278,7 @@ export default function ProductsPage() {
                           </tr>
                           {expandedProducts.has(product.id) && (
                             <tr className="bg-muted/30">
-                              <td colSpan={6} className="py-4 px-4">
+                              <td colSpan={7} className="py-4 px-4">
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                                   <div>
                                     <p className="text-muted-foreground">
@@ -318,24 +336,39 @@ export default function ProductsPage() {
                       key={product.id}
                       className="rounded-lg border border-border p-4 space-y-3"
                     >
-                      <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-start gap-3">
+                        {product.productUrl ? (
+                          <img
+                            src={product.productUrl}
+                            alt={product.productName}
+                            className="h-16 w-16 rounded-lg object-cover flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="h-16 w-16 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                            <ImageOff className="h-6 w-6 text-muted-foreground" />
+                          </div>
+                        )}
                         <div className="min-w-0 flex-1">
-                          <h3 className="font-medium text-foreground truncate">
-                            {product.productName}
-                          </h3>
-                          <p className="text-xs text-muted-foreground">
-                            {product.category}
-                          </p>
-                        </div>
-                        <div className="flex gap-1 flex-shrink-0">
-                          <Badge
-                            variant={
-                              product.quantity > 10 ? "default" : "destructive"
-                            }
-                            className="text-xs"
-                          >
-                            {product.quantity > 10 ? "Còn hàng" : "Sắp hết"}
-                          </Badge>
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0 flex-1">
+                              <h3 className="font-medium text-foreground truncate">
+                                {product.productName}
+                              </h3>
+                              <p className="text-xs text-muted-foreground">
+                                {product.category}
+                              </p>
+                            </div>
+                            <Badge
+                              variant={
+                                product.quantity > 10
+                                  ? "default"
+                                  : "destructive"
+                              }
+                              className="text-xs flex-shrink-0"
+                            >
+                              {product.quantity > 10 ? "Còn hàng" : "Sắp hết"}
+                            </Badge>
+                          </div>
                         </div>
                       </div>
 

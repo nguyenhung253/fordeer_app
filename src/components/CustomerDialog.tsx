@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,13 +11,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ImagePlus, X } from "lucide-react";
 import type { Customer } from "@/types/api";
 
 interface CustomerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   customer?: Customer | null;
-  onSave?: (customer: any) => void;
+  onSave?: (data: FormData) => void;
 }
 
 export function CustomerDialog({
@@ -30,9 +31,12 @@ export function CustomerDialog({
     fullName: "",
     email: "",
     phone: "",
-    birthYear: undefined as number | undefined,
+    birthYear: "",
     address: "",
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (customer) {
@@ -40,31 +44,65 @@ export function CustomerDialog({
         fullName: customer.fullName,
         email: customer.email,
         phone: customer.phone,
-        birthYear: customer.birthYear,
+        birthYear: customer.birthYear?.toString() || "",
         address: customer.address || "",
       });
+      setImagePreview(customer.avatarUrl || null);
     } else {
       setFormData({
         fullName: "",
         email: "",
         phone: "",
-        birthYear: undefined,
+        birthYear: "",
         address: "",
       });
+      setImagePreview(null);
     }
+    setImageFile(null);
   }, [customer, open]);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(customer?.avatarUrl || null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (onSave) {
-      onSave(formData);
+      const data = new FormData();
+      data.append("fullName", formData.fullName);
+      data.append("email", formData.email);
+      data.append("phone", formData.phone);
+      if (formData.birthYear) {
+        data.append("birthYear", formData.birthYear);
+      }
+      data.append("address", formData.address);
+      if (imageFile) {
+        data.append("avatar", imageFile);
+      }
+      onSave(data);
     }
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {customer ? "Chỉnh sửa khách hàng" : "Thêm khách hàng mới"}
@@ -77,6 +115,56 @@ export function CustomerDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
+            {/* Avatar Upload - only show when editing */}
+            {customer && (
+              <div className="grid gap-2">
+                <Label>Ảnh đại diện</Label>
+                <div className="flex items-center gap-4">
+                  {imagePreview ? (
+                    <div className="relative">
+                      <img
+                        src={imagePreview}
+                        alt="Avatar"
+                        className="h-20 w-20 rounded-full object-cover border"
+                      />
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/90"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="h-20 w-20 rounded-full border-2 border-dashed border-muted-foreground/25 flex flex-col items-center justify-center gap-1 hover:border-primary/50 transition-colors"
+                    >
+                      <ImagePlus className="h-5 w-5 text-muted-foreground" />
+                    </button>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                  {imagePreview && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      Đổi ảnh
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="grid gap-2">
               <Label htmlFor="fullName">Họ và tên</Label>
               <Input
@@ -123,12 +211,9 @@ export function CustomerDialog({
                 <Input
                   id="birthYear"
                   type="number"
-                  value={formData.birthYear || ""}
+                  value={formData.birthYear}
                   onChange={(e) =>
-                    setFormData({ 
-                      ...formData, 
-                      birthYear: e.target.value ? Number(e.target.value) : undefined 
-                    })
+                    setFormData({ ...formData, birthYear: e.target.value })
                   }
                   placeholder="1990"
                   min="1900"
