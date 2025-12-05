@@ -14,7 +14,7 @@
 ### 🛍️ Quản lý Sản phẩm
 
 - Thêm, sửa, xóa sản phẩm
-- Phân loại theo danh mục (Cà phê, Trà, Sinh tố, Nước ép, Khác)
+- Phân loại theo danh mục (Cà phê, Trà sữa, Trà, Nước ép, Latte)
 - Quản lý giá và số lượng tồn kho
 - Tìm kiếm và lọc sản phẩm
 - Phân trang dữ liệu

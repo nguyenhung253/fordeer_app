@@ -199,7 +199,7 @@ export function ProductDialog({
                   <SelectItem value="Trà sữa">Trà sữa</SelectItem>
                   <SelectItem value="Trà">Trà</SelectItem>
                   <SelectItem value="Nước ép">Nước ép</SelectItem>
-                  <SelectItem value="Sinh tố">Sinh tố</SelectItem>
+                  <SelectItem value="Latte">Latte</SelectItem>
                 </SelectContent>
               </Select>
             </div>
