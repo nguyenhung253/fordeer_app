@@ -53,8 +53,8 @@ function useTokenFromUrl() {
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   if (!authService.isAuthenticated()) {
-    // Redirect to main site login page instead of local login
-    window.location.href = MAIN_SITE_LOGIN_URL;
+    // Redirect to main site login page with logout action to clear any stale session
+    window.location.href = `${MAIN_SITE_LOGIN_URL}?action=logout`;
     return null;
   }
   return <>{children}</>;

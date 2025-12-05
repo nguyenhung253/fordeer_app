@@ -33,9 +33,9 @@ api.interceptors.response.use(
     ) {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("user");
-      if (window.location.pathname !== "/login") {
-        window.location.href = "/login";
-      }
+      // Redirect to shop login with logout action (token expired)
+      window.location.href =
+        "https://fordeer-shop.vercel.app/login?action=logout";
     }
     return Promise.reject(error);
   }

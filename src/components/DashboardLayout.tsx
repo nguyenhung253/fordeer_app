@@ -271,8 +271,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                       } catch (error) {
                         console.error("Logout error:", error);
                       } finally {
-                        // Force redirect to login
-                        window.location.replace("/login");
+                        // Redirect to shop login with logout action
+                        window.location.replace(
+                          "https://fordeer-shop.vercel.app/login?action=logout"
+                        );
                       }
                     }}
                   >
